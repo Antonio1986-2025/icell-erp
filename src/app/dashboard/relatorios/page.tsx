@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { startOfDay, startOfMonth, subMonths } from "date-fns";
-import Link from "next/link";
+import { startOfMonth, subMonths } from "date-fns";
+import PeriodSelector from "@/components/relatorios/PeriodSelector";
 
 async function getRelatorios(tenantId: string, periodo?: string) {
   const agora = new Date();
@@ -192,23 +192,7 @@ export default async function RelatoriosPage({
             Resumo de vendas e financeiro da loja
           </p>
         </div>
-        <form className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Período:</label>
-          <select
-            name="periodo"
-            defaultValue={periodo || "6"}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            onChange={(e) => {
-              const form = e.currentTarget.form;
-              if (form) form.submit();
-            }}
-          >
-            <option value="1">Último mês</option>
-            <option value="3">Últimos 3 meses</option>
-            <option value="6">Últimos 6 meses</option>
-            <option value="12">Último ano</option>
-          </select>
-        </form>
+        <PeriodSelector defaultValue={periodo || "6"} />
       </div>
 
       {/* Cards de resumo */}
