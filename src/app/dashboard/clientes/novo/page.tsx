@@ -72,8 +72,8 @@ export default function NovoClientePage() {
       <form onSubmit={handleSubmit} className="mt-6 max-w-3xl space-y-4">
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados Pessoais</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Nome *</label>
               <input
                 type="text"
@@ -137,7 +137,7 @@ export default function NovoClientePage() {
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Endereço</label>
               <input
                 type="text"

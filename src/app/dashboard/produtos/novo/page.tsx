@@ -165,8 +165,8 @@ export default function NovoProdutoPage() {
         {/* Dados Básicos */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados Básicos</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Nome</label>
               <input
                 type="text"
@@ -262,7 +262,7 @@ export default function NovoProdutoPage() {
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Descrição</label>
               <textarea
                 value={form.descricao}
@@ -277,7 +277,7 @@ export default function NovoProdutoPage() {
         {/* Tipo / Condição */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Tipo do Produto</h2>
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <label className="flex items-center gap-3 rounded-lg border border-gray-300 p-4 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
               <input
                 type="radio"
@@ -348,7 +348,7 @@ export default function NovoProdutoPage() {
         {form.tipo === "USADO" && (
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Detalhes do Aparelho Usado</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               {cat?.hasImei && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">IMEI *</label>
@@ -436,7 +436,7 @@ export default function NovoProdutoPage() {
                   ))}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Acessórios Inclusos</label>
                 <input
                   type="text"
@@ -446,7 +446,7 @@ export default function NovoProdutoPage() {
                   placeholder="Ex: Carregador, Caixa, Fone"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Observações</label>
                 <textarea
                   value={stockItem.observacoes}

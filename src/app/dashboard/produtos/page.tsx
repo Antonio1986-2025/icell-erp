@@ -52,77 +52,97 @@ export default async function ProdutosPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
+          <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Produtos</h1>
           <p className="text-sm text-gray-500">{total} resultado{total !== 1 ? "s" : ""}</p>
         </div>
         <Link
           href="/dashboard/produtos/novo"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 active:scale-[0.98] transition-all md:py-2.5"
         >
-          Criar Produto
+          + Novo Produto
         </Link>
       </div>
 
+      {/* Busca */}
       <div className="mt-4">
         <form method="GET">
           <input
             type="text"
             name="search"
             defaultValue={search}
-            placeholder="Buscar por nome, marca, modelo ou SKU..."
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            placeholder="🔍 Buscar por nome, marca, modelo ou SKU..."
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm"
           />
         </form>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      {/* Tabela responsiva */}
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table className="min-w-[500px] w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 hidden md:table-header-group">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Produto</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Marca</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 hidden sm:table-cell">Marca</th>
               <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Tipo</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Categoria</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 hidden md:table-cell">Categoria</th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Preço</th>
               <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Estoque</th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">IMEI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {produtos.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <p className="text-sm font-medium text-gray-900">{p.nome}</p>
-                  {p.modelo && <p className="text-xs text-gray-400">Modelo: {p.modelo}</p>}
+              <tr key={p.id} className="hover:bg-gray-50 block md:table-row p-4 md:p-0 border-b md:border-b-0">
+                {/* Nome do produto - sempre visível */}
+                <td className="px-4 py-3 block md:table-cell">
+                  <Link href={`/dashboard/estoque?search=${p.nome}`} className="block">
+                    <p className="text-sm font-medium text-gray-900">{p.nome}</p>
+                    <div className="flex flex-wrap gap-2 mt-1 md:hidden">
+                      {p.marca && <span className="text-xs text-gray-500">{p.marca}</span>}
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        p.tipo === "USADO"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-green-100 text-green-700"
+                      }`}>
+                        {p.tipo === "USADO" ? "Usado" : "Novo"}
+                      </span>
+                      <span className="text-xs text-gray-400">{p.categoria.nome}</span>
+                    </div>
+                    {p.modelo && <p className="text-xs text-gray-400 mt-0.5">Modelo: {p.modelo}</p>}
+                  </Link>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">{p.marca || "--"}</td>
-                <td className="px-4 py-3 text-center">
-                  <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                      p.tipo === "USADO"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
+                {/* Marca - escondido no mobile */}
+                <td className="px-4 py-3 text-sm text-gray-700 hidden sm:table-cell">{p.marca || "--"}</td>
+                {/* Tipo - escondido no mobile (mostrado no card) */}
+                <td className="px-4 py-3 text-center hidden md:table-cell">
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                    p.tipo === "USADO"
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-green-100 text-green-700"
+                  }`}>
                     {p.tipo === "USADO" ? "Usado" : "Novo"}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500">{p.categoria.nome}</td>
-                <td className="px-4 py-3 text-right text-sm text-gray-900">
+                {/* Categoria - escondido no mobile */}
+                <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{p.categoria.nome}</td>
+                {/* Preço */}
+                <td className="px-4 py-3 text-right text-sm text-gray-900 block md:table-cell">
+                  <span className="md:hidden text-xs text-gray-400">Preço: </span>
                   {p.precoVenda ? formatCurrency(p.precoVenda) : "--"}
                 </td>
-                <td className="px-4 py-3 text-center text-sm text-gray-500">{p.stockItems.length}</td>
-                <td className="px-4 py-3 text-center text-sm text-gray-500">
-                  {p.stockItems.length === 0 ? "--" : p.stockItems.length === 1 ? p.stockItems[0].imei || "--" : `Vários (${p.stockItems.length})`}
+                {/* Estoque */}
+                <td className="px-4 py-3 text-center text-sm text-gray-500 block md:table-cell">
+                  <span className="md:hidden text-xs text-gray-400">Estoque: </span>
+                  {p.stockItems.length}
                 </td>
               </tr>
             ))}
             {produtos.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
-                  {search ? "Nenhum resultado encontrado" : "Nenhum produto cadastrado"}
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
+                  {search ? "❌ Nenhum resultado encontrado" : "📱 Nenhum produto cadastrado"}
                 </td>
               </tr>
             )}
@@ -130,15 +150,16 @@ export default async function ProdutosPage({
         </table>
       </div>
 
+      {/* Paginação */}
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Link
               key={p}
               href={`/dashboard/produtos?page=${p}${search ? `&search=${search}` : ""}`}
-              className={`rounded-lg px-3 py-1.5 text-sm ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all ${
                 p === page
-                  ? "bg-blue-600 text-white"
+                  ? "bg-blue-600 text-white shadow-md"
                   : "border border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
             >

@@ -109,46 +109,51 @@ export default function ConfiguracoesPage() {
       <h1 className="mb-1 text-2xl font-bold text-gray-900">Configurações</h1>
       <p className="mb-6 text-sm text-gray-500">Gerencie sua loja, categorias, usuários e formas de pagamento</p>
 
-      <div className="mb-6 flex gap-2">
-        {([["loja", "Dados da Loja"], ["categorias", "Categorias"], ["usuarios", "Usuários"], ["pagamentos", "Pagamentos"]] as [Tab, string][]).map(([key, label]) => (
+      {/* Abas responsivas */}
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
+        {([["loja", "📋 Loja"], ["categorias", "🏷️ Categorias"], ["usuarios", "👥 Usuários"], ["pagamentos", "💳 Pagamentos"]] as [Tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === key ? "bg-blue-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
+            className={`snap-start shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              tab === key
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
+                : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}>
             {label}
           </button>
         ))}
       </div>
 
-      {/* Dados da Loja */}
+      {/* ==================== DADOS DA LOJA ==================== */}
       {tab === "loja" && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados da Loja</h2>
           <p className="text-sm text-gray-500 mb-4">As informações da loja são definidas no cadastro. Para alterar, edite diretamente no banco de dados.</p>
           <div className="space-y-3 text-sm">
-            <div><span className="font-medium text-gray-700">Nome:</span> <span className="text-gray-900">Minha Loja</span></div>
-            <div><span className="font-medium text-gray-700">Slug:</span> <span className="text-gray-900">minha-loja</span></div>
-            <div><span className="font-medium text-gray-700">Email:</span> <span className="text-gray-500">—</span></div>
-            <div><span className="font-medium text-gray-700">Telefone:</span> <span className="text-gray-500">—</span></div>
-            <div><span className="font-medium text-gray-700">CNPJ:</span> <span className="text-gray-500">—</span></div>
+            <div className="flex justify-between border-b border-gray-100 pb-2"><span className="font-medium text-gray-700">Nome:</span><span className="text-gray-900">Minha Loja</span></div>
+            <div className="flex justify-between border-b border-gray-100 pb-2"><span className="font-medium text-gray-700">Slug:</span><span className="text-gray-900">minha-loja</span></div>
+            <div className="flex justify-between border-b border-gray-100 pb-2"><span className="font-medium text-gray-700">Email:</span><span className="text-gray-500">—</span></div>
+            <div className="flex justify-between border-b border-gray-100 pb-2"><span className="font-medium text-gray-700">Telefone:</span><span className="text-gray-500">—</span></div>
+            <div className="flex justify-between pb-2"><span className="font-medium text-gray-700">CNPJ:</span><span className="text-gray-500">—</span></div>
           </div>
         </div>
       )}
 
-      {/* Categorias */}
+      {/* ==================== CATEGORIAS ==================== */}
       {tab === "categorias" && (
         <div className="space-y-6">
-          <form onSubmit={salvarCategoria} className="rounded-lg border border-gray-200 bg-white p-6">
+          <form onSubmit={salvarCategoria} className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">{editCatId ? "Editar" : "Nova"} Categoria</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input type="text" value={catForm.nome} onChange={(e) => setCatForm({ ...catForm, nome: e.target.value })} required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
-              <div className="flex items-end gap-4 pb-2">
+              <div className="flex flex-wrap items-end gap-4 pb-2">
                 {(["hasImei", "hasBattery", "hasSerial", "hasWarranty"] as const).map((field) => (
                   <label key={field} className="flex items-center gap-2 text-sm text-gray-700">
                     <input type="checkbox" checked={catForm[field]} onChange={(e) => setCatForm({ ...catForm, [field]: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                      className="h-5 w-5 md:h-4 md:w-4 rounded border-gray-300 text-blue-600" />
                     {field === "hasImei" ? "IMEI" : field === "hasBattery" ? "Bateria" : field === "hasSerial" ? "Serial" : "Garantia"}
                   </label>
                 ))}
@@ -157,16 +162,16 @@ export default function ConfiguracoesPage() {
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             <div className="mt-4 flex gap-3">
               <button type="submit" disabled={saving}
-                className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98] md:py-2.5">
                 {saving ? "Salvando..." : "Salvar"}
               </button>
               {editCatId && <button type="button" onClick={() => { setEditCatId(null); setCatForm({ nome: "", hasImei: false, hasBattery: false, hasSerial: false, hasWarranty: true }); }}
-                className="rounded-lg border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>}
+                className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98] md:py-2.5">Cancelar</button>}
             </div>
           </form>
 
-          <div className="rounded-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="min-w-[600px] w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nome</th>
@@ -186,8 +191,8 @@ export default function ConfiguracoesPage() {
                     <td className="px-4 py-3 text-center">{cat.hasSerial ? "✅" : "—"}</td>
                     <td className="px-4 py-3 text-center">{cat.hasWarranty ? "✅" : "—"}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => editarCategoria(cat)} className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 mr-1">Editar</button>
-                      <button onClick={() => excluirCategoria(cat.id)} className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50">Excluir</button>
+                      <button onClick={() => editarCategoria(cat)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 mr-1">Editar</button>
+                      <button onClick={() => excluirCategoria(cat.id)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -198,32 +203,32 @@ export default function ConfiguracoesPage() {
         </div>
       )}
 
-      {/* Usuários */}
+      {/* ==================== USUÁRIOS ==================== */}
       {tab === "usuarios" && (
         <div className="space-y-6">
-          <form onSubmit={salvarUsuario} className="rounded-lg border border-gray-200 bg-white p-6">
+          <form onSubmit={salvarUsuario} className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">{editUserId ? "Editar" : "Novo"} Usuário</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input type="text" value={userForm.nome} onChange={(e) => setUserForm({ ...userForm, nome: e.target.value })} required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Senha {editUserId && "(deixe vazio para manter)"}</label>
                 <input type="password" value={userForm.senha} onChange={(e) => setUserForm({ ...userForm, senha: e.target.value })}
                   required={!editUserId}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Função</label>
                 <select value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm">
                   <option value="ADMIN">Admin</option>
                   <option value="VENDEDOR">Vendedor</option>
                   <option value="COMPRADOR">Comprador</option>
@@ -232,22 +237,22 @@ export default function ConfiguracoesPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Comissão (%)</label>
                 <input type="number" step="0.1" value={userForm.comissao} onChange={(e) => setUserForm({ ...userForm, comissao: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
             </div>
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             <div className="mt-4 flex gap-3">
               <button type="submit" disabled={saving}
-                className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98] md:py-2.5">
                 {saving ? "Salvando..." : "Salvar"}
               </button>
               {editUserId && <button type="button" onClick={() => { setEditUserId(null); setUserForm({ nome: "", email: "", senha: "", role: "VENDEDOR", comissao: "" }); }}
-                className="rounded-lg border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>}
+                className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98] md:py-2.5">Cancelar</button>}
             </div>
           </form>
 
-          <div className="rounded-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="min-w-[500px] w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nome</th>
@@ -269,7 +274,7 @@ export default function ConfiguracoesPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-gray-500">{u.comissao ? `${u.comissao}%` : "—"}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => editarUsuario(u)} className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50">Editar</button>
+                      <button onClick={() => editarUsuario(u)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50">Editar</button>
                     </td>
                   </tr>
                 ))}
@@ -280,21 +285,21 @@ export default function ConfiguracoesPage() {
         </div>
       )}
 
-      {/* Formas de Pagamento */}
+      {/* ==================== PAGAMENTOS ==================== */}
       {tab === "pagamentos" && (
         <div className="space-y-6">
-          <form onSubmit={salvarPagamento} className="rounded-lg border border-gray-200 bg-white p-6">
+          <form onSubmit={salvarPagamento} className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Nova Forma de Pagamento</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input type="text" value={pagForm.nome} onChange={(e) => setPagForm({ ...pagForm, nome: e.target.value })} required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tipo</label>
                 <select value={pagForm.tipo} onChange={(e) => setPagForm({ ...pagForm, tipo: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                  className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm">
                   <option value="DINHEIRO">Dinheiro</option>
                   <option value="PIX">PIX</option>
                   <option value="CARTAO_CREDITO">Cartão de Crédito</option>
@@ -306,12 +311,12 @@ export default function ConfiguracoesPage() {
             </div>
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             <button type="submit" disabled={saving}
-              className="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+              className="mt-4 w-full sm:w-auto rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98] md:py-2.5">
               {saving ? "Salvando..." : "Adicionar"}
             </button>
           </form>
 
-          <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>

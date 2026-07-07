@@ -82,7 +82,6 @@ export default function PdvPage() {
   const total = subtotal - valorDesconto - valorLaudo;
   const totalPago = payments.reduce((s, p) => s + p.valor, 0);
   const falta = Math.max(0, total - totalPago);
-  const trocoCalculado = totalPago > total ? totalPago - total : 0;
 
   async function buscarProdutos(q: string) {
     if (!q.trim()) { setProdResults([]); return; }
@@ -156,7 +155,6 @@ export default function PdvPage() {
       setCliente(reserva.cliente);
       setClienteSearch(reserva.cliente.nome);
     }
-    // Add the reservation's stock item to cart
     const item = reserva.items?.[0];
     if (item) {
       setCart([{
@@ -221,7 +219,6 @@ export default function PdvPage() {
   function selecionarLaudo(laudo: LaudoPendente) {
     setLaudoVinculado(laudo);
     setShowLaudoSelector(false);
-    // Add trade-in item to cart
     setCart((prev) => [
       ...prev.filter((i) => !i.isLaudo),
       {
@@ -266,7 +263,6 @@ export default function PdvPage() {
       const pgtoValidos = payments.filter((p) => p.valor > 0);
 
       if (reservaAtiva) {
-        // ====== FLUXO RESERVA ======
         const body: any = {
           status: "CONCLUIDA",
           payments: pgtoValidos,
@@ -290,7 +286,6 @@ export default function PdvPage() {
         const venda = await res.json();
         router.push(`/dashboard/vendas/${venda.id}`);
       } else {
-        // ====== FLUXO NORMAL ======
         let clienteId = cliente?.id;
 
         if (!clienteId && clienteSearch.trim()) {
@@ -348,16 +343,17 @@ export default function PdvPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] gap-4">
-      {/* COLUNA ESQUERDA: Busca e carrinho */}
-      <div className="flex w-2/3 flex-col gap-4">
-        {/* Abas: Produtos / Reservas */}
-        <div className="flex gap-1">
+    <div className="flex flex-col gap-4 lg:flex-row lg:h-[calc(100vh-6rem)]">
+      {/* ===== LADO ESQUERDO: Busca e Carrinho ===== */}
+      <div className="flex flex-col gap-4 lg:w-3/5">
+
+        {/* Abas */}
+        <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
           <button
             onClick={() => setAbaAtiva("produtos")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`snap-start shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               abaAtiva === "produtos"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -365,53 +361,53 @@ export default function PdvPage() {
           </button>
           <button
             onClick={() => setAbaAtiva("reservas")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`snap-start shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               abaAtiva === "reservas"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             📋 Reservas
           </button>
           {reservaAtiva && (
-            <div className="ml-auto flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5">
-              <span className="text-xs text-amber-700">
-                Reserva #{reservaAtiva.numero} — {reservaAtiva.cliente?.nome}
+            <div className="ml-auto flex shrink-0 items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2">
+              <span className="text-xs text-amber-700 font-medium">
+                🔖 Reserva #{reservaAtiva.numero}
               </span>
-              <button onClick={limparReserva} className="text-xs text-red-500 hover:text-red-700 font-medium">
-                Limpar
+              <button onClick={limparReserva} className="text-xs text-red-500 hover:text-red-700 font-bold">
+                ✕
               </button>
             </div>
           )}
         </div>
 
-        {/* Conteúdo da aba ativa */}
+        {/* Conteúdo da aba */}
         {abaAtiva === "reservas" && !reservaAtiva && (
-          <div className="relative rounded-lg border border-gray-200 bg-white p-4">
+          <div className="relative rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Buscar Reserva</h2>
             <input
               type="text"
               value={reservaSearch}
               onChange={(e) => buscarReservas(e.target.value)}
               placeholder="Nome ou CPF do cliente..."
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
               autoFocus
             />
             {showReservaResults && reservaResults.length > 0 && (
-              <div className="mt-2 rounded-lg border border-gray-200 bg-white shadow">
+              <div className="mt-2 rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
                 {reservaResults.map((r: any) => (
                   <button
                     key={r.id}
                     onClick={() => selecionarReserva(r)}
-                    className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50"
+                    className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                   >
                     <p className="text-sm font-medium text-gray-900">
                       #{r.numero} — {r.items?.[0]?.parent?.nome || "Produto"}
                     </p>
-                    <div className="mt-1 flex gap-3 text-xs text-gray-500">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
                       <span>Cliente: {r.cliente?.nome || "—"}</span>
                       <span>Vendedor: {r.vendedor?.nome || "—"}</span>
-                      <span>Criada: {new Date(r.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(r.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-gray-800">
                       {formatCurrency(r.items?.[0]?.stockItem?.precoVenda || r.items?.[0]?.parent?.precoVenda || 0)}
@@ -420,336 +416,296 @@ export default function PdvPage() {
                 ))}
               </div>
             )}
-            {reservaSearch.trim() && reservaResults.length === 0 && (
-              <p className="mt-2 text-sm text-gray-400">Nenhuma reserva encontrada</p>
-            )}
           </div>
         )}
 
         {abaAtiva === "reservas" && reservaAtiva && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="font-medium text-green-900">
-              ✅ Reserva #{reservaAtiva.numero} carregada
-            </p>
+          <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+            <p className="font-semibold text-green-900">✅ Reserva #{reservaAtiva.numero} carregada</p>
             <p className="mt-1 text-xs text-green-700">
-              Cliente: {reservaAtiva.cliente?.nome} | 
-              Produto: {reservaAtiva.items?.[0]?.parent?.nome}
+              Cliente: {reservaAtiva.cliente?.nome} | Produto: {reservaAtiva.items?.[0]?.parent?.nome}
             </p>
             <p className="mt-1 text-sm font-bold text-green-800">
-              Valor: {formatCurrency(reservaAtiva.items?.[0]?.stockItem?.precoVenda || reservaAtiva.items?.[0]?.parent?.precoVenda || 0)}
+              {formatCurrency(reservaAtiva.items?.[0]?.stockItem?.precoVenda || reservaAtiva.items?.[0]?.parent?.precoVenda || 0)}
             </p>
           </div>
         )}
 
-        {/* Busca de Produtos (só aparece na aba produtos) */}
+        {/* Busca de Produtos */}
         {abaAtiva === "produtos" && (
-        <div className="relative rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Adicionar Produto</h2>
-          <input
-            type="text"
-            value={searchProd}
-            onChange={(e) => { setSearchProd(e.target.value); buscarProdutos(e.target.value); }}
-            placeholder="Buscar por nome, SKU, IMEI..."
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
-          {showProdSearch && prodResults.length > 0 && (
-            <div className="absolute left-4 right-4 top-full z-10 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-              {prodResults.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => addToCart(p)}
-                  className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{p.nome}</p>
-                      <p className="text-xs text-gray-500">
-                        {p.marca} {p.modelo} | {p.categoria.nome}
-                        {p.stockItems.length > 0 && ` | ${p.stockItems.length} em estoque`}
+          <div className="relative rounded-xl border border-gray-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Adicionar Produto</h2>
+            <input
+              type="text"
+              value={searchProd}
+              onChange={(e) => { setSearchProd(e.target.value); buscarProdutos(e.target.value); }}
+              placeholder="🔍 Buscar por nome, SKU, IMEI..."
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+            />
+            {showProdSearch && prodResults.length > 0 && (
+              <div className="mt-2 max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                {prodResults.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => addToCart(p)}
+                    className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-sm font-medium text-gray-900 truncate">{p.nome}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {p.marca} {p.modelo} | {p.categoria.nome}
+                          {p.stockItems.length > 0 && ` | ${p.stockItems.length} em estoque`}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 shrink-0">
+                        {p.precoVenda ? formatCurrency(p.precoVenda) : "—"}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {p.precoVenda ? formatCurrency(p.precoVenda) : "—"}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Carrinho */}
-        <div className="flex-1 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="flex-1 rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="mb-3 text-sm font-bold uppercase text-gray-700">
-            Carrinho ({cart.filter((i) => i.tipo === "SAIDA").length} itens)
+            🛒 Carrinho ({cart.filter((i) => i.tipo === "SAIDA").length} itens)
           </h2>
 
           {cart.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">Carrinho vazio. Adicione produtos.</p>
+            <p className="py-8 text-center text-sm text-gray-400">Carrinho vazio. 🔍 Adicione produtos acima.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
               {cart.map((item) => (
-                <div key={item.key} className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
+                <div key={item.key} className={`flex items-center justify-between rounded-xl border px-3 py-3 ${
                   item.isLaudo ? "border-blue-200 bg-blue-50" : "border-gray-100"
                 }`}>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 truncate">
                         {item.isLaudo ? "🔄 " : ""}{item.nome}
                       </p>
-                      {item.isLaudo && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                          Trade-in
-                        </span>
-                      )}
                     </div>
-                    {item.imei && <p className="text-xs text-gray-400">IMEI: {item.imei}</p>}
-                    {item.quantidade > 1 && (
-                      <p className="text-xs text-gray-400">Qtd: {item.quantidade}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className={`text-sm font-semibold ${item.precoUnit < 0 ? "text-green-600" : "text-gray-900"}`}>
-                      {item.precoUnit < 0 ? "- " : ""}{formatCurrency(Math.abs(item.precoUnit))}
+                    <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
+                      {item.imei && <span className="font-mono">IMEI: {item.imei}</span>}
+                      {item.isLaudo && <span className="text-blue-600">Trade-in</span>}
+                      <span>Qtd: {item.quantidade}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                      {item.isLaudo ? "+ " : ""}{formatCurrency(item.precoUnit)}
                     </p>
-                    <button
-                      onClick={() => removeFromCart(item.key)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remover
-                    </button>
                   </div>
+                  <button
+                    onClick={() => removeFromCart(item.key)}
+                    className="shrink-0 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 active:scale-95 transition-all"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {cart.filter((i) => i.tipo === "SAIDA").length > 0 && (
+            <div className="mt-3 border-t border-gray-100 pt-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Subtotal</span>
+                <span className="text-lg font-bold text-gray-900">{formatCurrency(subtotal)}</span>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* COLUNA DIREITA: Resumo e finalização */}
-      <div className="flex w-1/3 flex-col gap-4">
+      {/* ===== LADO DIREITO: Cliente, Pagamento, Finalizar ===== */}
+      <div className="flex flex-col gap-4 lg:w-2/5">
+
         {/* Cliente */}
-        <div className="relative rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Cliente</h2>
+        <div className="relative rounded-xl border border-gray-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">👤 Cliente</h2>
           <input
             type="text"
             value={clienteSearch}
             onChange={(e) => buscarCliente(e.target.value)}
-            placeholder="Nome ou CPF do cliente..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            placeholder="Nome, CPF ou telefone..."
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
           />
           {showClienteSearch && clienteResults.length > 0 && (
-            <div className="absolute left-4 right-4 top-full z-10 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div className="mt-2 rounded-xl border border-gray-200 bg-white shadow-lg max-h-40 overflow-y-auto">
               {clienteResults.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => selecionarCliente(c)}
-                  className="w-full border-b border-gray-100 px-4 py-2 text-left text-sm hover:bg-gray-50"
+                  className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                 >
-                  <span className="font-medium">{c.nome}</span>
-                  {c.cpf && <span className="ml-2 text-gray-500">{c.cpf}</span>}
+                  <p className="text-sm font-medium text-gray-900">{c.nome}</p>
+                  <p className="text-xs text-gray-500">{c.cpf && `CPF: ${c.cpf} | `}{c.telefone && `Tel: ${c.telefone}`}</p>
+                </button>
+              ))}
+            </div>
+          )}
+          {cliente && (
+            <p className="mt-2 text-xs text-green-600">✅ {cliente.nome} {cliente.cpf && `(${cliente.cpf})`}</p>
+          )}
+        </div>
+
+        {/* Laudo / Trade-in */}
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">🔄 Trade-in (Troca)</h2>
+          {!laudoVinculado ? (
+            <button
+              onClick={abrirLaudoSelector}
+              className="w-full rounded-xl border-2 border-dashed border-blue-300 px-4 py-4 text-sm font-medium text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all active:scale-[0.98]"
+            >
+              + Vincular Laudo de Troca
+            </button>
+          ) : (
+            <div className="rounded-xl bg-blue-50 border border-blue-200 p-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-900">{laudoVinculado.aparelhoNome}</p>
+                  <p className="text-xs text-blue-600">{laudoVinculado.imei && `IMEI: ${laudoVinculado.imei}`}</p>
+                  <p className="text-sm font-bold text-blue-800 mt-1">- {formatCurrency(laudoVinculado.valorEstimado || 0)}</p>
+                </div>
+                <button onClick={removerLaudo} className="text-red-500 hover:text-red-700 text-lg">✕</button>
+              </div>
+            </div>
+          )}
+
+          {showLaudoSelector && (
+            <div className="mt-3 rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
+              {laudosPendentes.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => selecionarLaudo(l)}
+                  className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <p className="text-sm font-medium text-gray-900">{l.aparelhoNome}</p>
+                  <p className="text-xs text-gray-500">{l.cliente?.nome} | Est: {formatCurrency(l.valorEstimado || 0)}</p>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Laudo / Trade-in */}
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase text-gray-700">Trade-in</h2>
-            {!laudoVinculado && (
-              <button
-                onClick={abrirLaudoSelector}
-                className="rounded-lg bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
-              >
-                + Selecionar Laudo
-              </button>
-            )}
+        {/* Desconto */}
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">🏷️ Desconto</h2>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">R$</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={desconto}
+              onChange={(e) => setDesconto(e.target.value)}
+              placeholder="0,00"
+              className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+            />
           </div>
-          {laudoVinculado ? (
-            <div className="mt-2 rounded-lg bg-blue-50 p-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-900">{laudoVinculado.aparelhoNome}</p>
-                  {laudoVinculado.imei && <p className="text-xs text-blue-600">IMEI: {laudoVinculado.imei}</p>}
-                  <p className="text-sm font-bold text-blue-800">
-                    - {formatCurrency(laudoVinculado.valorEstimado || 0)}
-                  </p>
-                </div>
-                <button onClick={removerLaudo} className="text-xs text-red-500 hover:text-red-700">
-                  Remover
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-gray-400">Nenhum laudo vinculado</p>
-          )}
         </div>
 
-        {/* Laudo Selector Modal */}
-        {showLaudoSelector && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLaudoSelector(false)}>
-            <div className="mx-4 max-h-[70vh] w-full max-w-lg overflow-auto rounded-lg bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="mb-4 text-lg font-bold text-gray-900">Selecionar Laudo Pendente</h2>
-              {laudosPendentes.length === 0 ? (
-                <p className="py-4 text-center text-sm text-gray-500">Nenhum laudo pendente encontrado</p>
-              ) : (
-                <div className="space-y-2">
-                  {laudosPendentes.map((l: any) => {
-                const svc = l.imeiCheck?.services || {};
-                const fmiOn = svc.fmi?.data?.fmiOn ?? svc.fmi?.data?.fmiON;
-                const blacklisted = svc.blacklist?.data?.gsmaBlacklisted;
-                const simUnlocked = svc.simlock?.data?.unlocked;
-                return (
-                  <button
-                    key={l.id}
-                    onClick={() => selecionarLaudo(l)}
-                    className="w-full rounded-lg border border-gray-200 p-3 text-left hover:border-blue-300 hover:bg-blue-50"
-                  >
-                    <p className="font-medium text-gray-900">{l.aparelhoNome}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {l.imei && <span className="text-xs text-gray-500">IMEI: {l.imei}</span>}
-                      {l.cliente && <span className="text-xs text-gray-500">Cliente: {l.cliente.nome}</span>}
-                    </div>
-                    {l.imeiCheck && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                          fmiOn === false ? "bg-green-100 text-green-700" : fmiOn === true ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-400"
-                        }`}>
-                          iCloud: {fmiOn === false ? "OFF" : fmiOn === true ? "ON" : "..."}
-                        </span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                          blacklisted === false ? "bg-green-100 text-green-700" : blacklisted === true ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-400"
-                        }`}>
-                          IMEI: {blacklisted === false ? "Limpo" : blacklisted === true ? "BLOQ" : "..."}
-                        </span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                          simUnlocked === true ? "bg-green-100 text-green-700" : simUnlocked === false ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-400"
-                        }`}>
-                          SIM: {simUnlocked === true ? "Livre" : simUnlocked === false ? "Bloq" : "..."}
-                        </span>
-                      </div>
-                    )}
-                    {l.valorEstimado && (
-                      <p className="mt-1 text-sm font-semibold text-blue-700">{formatCurrency(l.valorEstimado)}</p>
-                    )}
-                  </button>
-                );
-              })}
+        {/* Pagamento */}
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">💳 Pagamento</h2>
+          <div className="space-y-3">
+            {payments.map((pgto, idx) => (
+              <div key={idx} className="rounded-xl bg-gray-50 border border-gray-200 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-gray-500">Pagamento {idx + 1}</span>
+                  {payments.length > 1 && (
+                    <button onClick={() => removerPagamento(idx)} className="text-xs text-red-500 hover:text-red-700 font-medium">Remover</button>
+                  )}
                 </div>
-              )}
-              <button
-                onClick={() => setShowLaudoSelector(false)}
-                className="mt-4 w-full rounded-lg border border-gray-300 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Resumo */}
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-bold uppercase text-gray-700">Resumo</h2>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            {valorLaudo > 0 && (
-              <div className="flex justify-between text-blue-600">
-                <span>Trade-in (desconto)</span>
-                <span>- {formatCurrency(valorLaudo)}</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between text-gray-600">
-              <span>Desconto</span>
-              <input
-                type="number"
-                value={desconto}
-                onChange={(e) => setDesconto(e.target.value)}
-                placeholder="0,00"
-                step="0.01"
-                className="w-24 rounded border border-gray-300 px-2 py-0.5 text-right text-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-            <hr />
-            <div className="flex justify-between text-lg font-bold text-gray-900">
-              <span>Total</span>
-              <span className={total < 0 ? "text-green-600" : ""}>{formatCurrency(Math.max(0, total))}</span>
-            </div>
-            {falta > 0 && (
-              <div className="flex justify-between text-sm text-red-600 font-medium">
-                <span>Falta</span>
-                <span>{formatCurrency(falta)}</span>
-              </div>
-            )}
-            {trocoCalculado > 0 && (
-              <div className="flex justify-between text-sm text-green-600 font-medium">
-                <span>Troco</span>
-                <span>{formatCurrency(trocoCalculado)}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <label className="block text-xs font-medium text-gray-700">Pagamentos</label>
-            {payments.map((pag, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <select
-                  value={pag.metodo}
-                  onChange={(e) => atualizarPagamento(idx, "metodo", e.target.value)}
-                  className="w-28 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="DINHEIRO">Dinheiro</option>
-                  <option value="PIX">PIX</option>
-                  <option value="CREDITO">Crédito</option>
-                  <option value="DEBITO">Débito</option>
-                  <option value="BOLETO">Boleto</option>
-                </select>
-                <input
-                  type="number"
-                  value={pag.valor || ""}
-                  onChange={(e) => atualizarPagamento(idx, "valor", parseFloat(e.target.value) || 0)}
-                  placeholder="R$ 0,00"
-                  step="0.01"
-                  className="w-28 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                />
-                {(pag.metodo === "CREDITO" || pag.metodo === "DEBITO") && (
+                <div className="grid grid-cols-2 gap-2">
                   <select
-                    value={pag.parcelas}
-                    onChange={(e) => atualizarPagamento(idx, "parcelas", parseInt(e.target.value))}
-                    className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                    value={pgto.metodo}
+                    onChange={(e) => atualizarPagamento(idx, "metodo", e.target.value)}
+                    className="rounded-xl border border-gray-300 px-3 py-3 text-sm focus:border-blue-500 focus:outline-none col-span-2 md:col-span-1"
                   >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((p) => (
-                      <option key={p} value={p}>{p}x</option>
-                    ))}
+                    <option value="DINHEIRO">💵 Dinheiro</option>
+                    <option value="PIX">📱 PIX</option>
+                    <option value="CARTAO_CREDITO">💳 Crédito</option>
+                    <option value="CARTAO_DEBITO">💳 Débito</option>
+                    <option value="BOLETO">📄 Boleto</option>
+                    <option value="OUTRO">Outro</option>
                   </select>
-                )}
-                {payments.length > 1 && (
-                  <button onClick={() => removerPagamento(idx)} className="text-xs text-red-500 hover:text-red-700">
-                    Remover
-                  </button>
-                )}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={pgto.valor || ""}
+                      onChange={(e) => atualizarPagamento(idx, "valor", parseFloat(e.target.value) || 0)}
+                      placeholder="0,00"
+                      className="w-full rounded-xl border border-gray-300 pl-8 pr-3 py-3 text-sm focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  {pgto.metodo === "CARTAO_CREDITO" && (
+                    <div className="col-span-2">
+                      <select
+                        value={pgto.parcelas}
+                        onChange={(e) => atualizarPagamento(idx, "parcelas", parseInt(e.target.value))}
+                        className="w-full rounded-xl border border-gray-300 px-3 py-3 text-sm focus:border-blue-500 focus:outline-none"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((p) => (
+                          <option key={p} value={p}>{p}x {p > 1 ? "sem juros" : "à vista"}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
-            <button onClick={adicionarPagamento} className="text-xs font-medium text-blue-600 hover:text-blue-800">
-              + Adicionar pagamento
+            <button
+              onClick={adicionarPagamento}
+              className="w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all active:scale-[0.98]"
+            >
+              + Outra forma de pagamento
             </button>
+          </div>
+
+          <div className="mt-3 border-t border-gray-100 pt-3 space-y-1.5">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Total</span>
+              <span className="font-bold text-gray-900">{formatCurrency(total)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Pago</span>
+              <span className="font-semibold text-green-600">{formatCurrency(totalPago)}</span>
+            </div>
+            {falta > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Falta</span>
+                <span className="font-bold text-red-600">{formatCurrency(falta)}</span>
+              </div>
+            )}
+            {totalPago > total && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Troco</span>
+                <span className="font-bold text-blue-600">{formatCurrency(totalPago - total)}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
+        {/* Botão Finalizar */}
         <button
           onClick={finalizarVenda}
-          disabled={loading || cart.filter((i) => !i.isLaudo).length === 0}
-          className="w-full rounded-lg bg-green-600 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+          disabled={loading || cart.filter((i) => i.tipo === "SAIDA").length === 0}
+          className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
         >
-          {loading ? "Finalizando..." : `Finalizar Venda`}
+          {loading ? "⏳ Finalizando..." : "✅ Finalizar Venda"}
         </button>
+
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3">
+            <p className="text-sm text-red-700 font-medium">❌ {error}</p>
+          </div>
+        )}
       </div>
     </div>
   );

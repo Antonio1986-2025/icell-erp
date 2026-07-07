@@ -155,8 +155,8 @@ export default function FinanceiroPage() {
         <p className="text-sm text-gray-500">Gerencie contas a pagar e receber</p>
       </div>
 
-      {/* Resumo */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      {/* Resumo responsivo */}
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs font-medium uppercase text-gray-500">A Pagar (pendente)</p>
           <p className="mt-1 text-2xl font-bold text-red-600">{formatCurrency(totalPagar)}</p>
@@ -175,8 +175,8 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      {/* Abas */}
-      <div className="mb-4 flex gap-2">
+      {/* Abas responsivas */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
         {([["pagar", "Contas a Pagar"], ["receber", "Contas a Receber"], ["fluxo", "Fluxo de Caixa"]] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
@@ -236,7 +236,7 @@ export default function FinanceiroPage() {
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {editingId ? "Editar" : "Nova"} {tab === "pagar" ? "Conta a Pagar" : "Conta a Receber"}
               </h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700">Descrição</label>
                   <input type="text" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} required
@@ -288,8 +288,8 @@ export default function FinanceiroPage() {
             </form>
           )}
 
-          {/* Tabela */}
-          <div className="rounded-lg border border-gray-200 bg-white">
+          {/* Tabela - Financeiro */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
