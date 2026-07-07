@@ -73,6 +73,7 @@ export default function PdvPage() {
   const [reservaSearch, setReservaSearch] = useState("");
   const [reservaResults, setReservaResults] = useState<any[]>([]);
   const [showReservaResults, setShowReservaResults] = useState(false);
+  const [reservasDoCliente, setReservasDoCliente] = useState<any[]>([]);
 
   useEffect(() => {
     // Carrega reserva automaticamente se veio via ?reserva=ID da URL
@@ -229,6 +230,11 @@ export default function PdvPage() {
     setCliente(c);
     setShowClienteSearch(false);
     setClienteSearch(c.nome);
+    // Verifica se o cliente tem reservas pendentes
+    fetch(`/api/reservas?cliente=${encodeURIComponent(c.nome)}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((reservas) => setReservasDoCliente(reservas || []))
+      .catch(() => setReservasDoCliente([]));
   }
 
   // Laudo selector
@@ -592,6 +598,33 @@ export default function PdvPage() {
           )}
           {cliente && (
             <p className="mt-2 text-xs text-green-600">✅ {cliente.nome} {cliente.cpf && `(${cliente.cpf})`}</p>
+          )}
+
+          {/* Aviso de reserva pendente do cliente */}
+          {cliente && reservasDoCliente.length > 0 && !reservaAtiva && (
+            <div className="mt-3 rounded-xl border-l-4 border-l-amber-400 bg-amber-50 border border-amber-200 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold uppercase text-amber-800">📋 Reserva Pendente</p>
+                  {reservasDoCliente.map((r) => (
+                    <div key={r.id} className="mt-2">
+                      <p className="text-sm font-medium text-gray-900">
+                        #{r.numero} — {r.items?.[0]?.parent?.nome || "Produto"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(r.createdAt).toLocaleDateString()} | {formatCurrency(r.items?.[0]?.stockItem?.precoVenda || r.items?.[0]?.parent?.precoVenda || 0)}
+                      </p>
+                      <button
+                        onClick={() => selecionarReserva(r)}
+                        className="mt-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 active:scale-95 transition-all"
+                      >
+                        Carregar no Carrinho
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
