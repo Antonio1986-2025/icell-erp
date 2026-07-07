@@ -10,7 +10,7 @@ echo "✅ Migrations aplicadas!"
 
 # Rodar seed (só se banco estiver vazio)
 echo "⏳ Verificando seed..."
-npx prisma db seed || echo "⚠️ Seed já foi executado ou falhou (ignorando)"
+node prisma/seed.js || echo "⚠️ Seed já foi executado ou falhou (ignorando)"
 echo "✅ Setup concluído!"
 
 # Iniciar o app
