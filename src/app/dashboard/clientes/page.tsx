@@ -1,149 +1,134 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
-async function getClientes(tenantId: string, search: string, page: number) {
+async function getClientes(tenantId: string, search?: string) {
   const where: any = { tenantId };
   if (search) {
     where.OR = [
-      { nome: { contains: search } },
+      { nome: { contains: search, mode: "insensitive" } },
       { cpf: { contains: search } },
       { telefone: { contains: search } },
-      { email: { contains: search } },
+      { email: { contains: search, mode: "insensitive" } },
     ];
   }
-
-  const limit = 20;
-  const [clientes, total] = await Promise.all([
-    prisma.client.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { nome: "asc" },
-    }),
-    prisma.client.count({ where }),
-  ]);
-
-  return { clientes, total, totalPages: Math.ceil(total / limit) };
+  const clientes = await prisma.client.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: { select: { transactions: true } },
+    },
+  });
+  return clientes;
 }
 
 export default async function ClientesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; page?: string }>;
+  searchParams: Promise<{ search?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) return <p>Não autenticado</p>;
-
+  if (!session?.user) {
+    return <p className="p-6 text-gray-500">Acesso não autorizado</p>;
+  }
   const tenantId = (session.user as any).tenantId;
-  const sp = await searchParams;
-  const search = sp.search || "";
-  const page = parseInt(sp.page || "1");
-
-  const { clientes, total, totalPages } = await getClientes(tenantId, search, page);
+  const { search } = await searchParams;
+  const clientes = await getClientes(tenantId, search);
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Clientes</h1>
-          <p className="text-sm text-gray-500">{total} resultado{total !== 1 ? "s" : ""}</p>
-        </div>
+      {/* Cabeçalho */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">👥 Clientes</h1>
         <Link
           href="/dashboard/clientes/novo"
-          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 active:scale-[0.98] transition-all md:py-2.5"
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95"
         >
           + Novo Cliente
         </Link>
       </div>
 
       {/* Busca */}
-      <div className="mt-4">
-        <form method="GET">
+      <form className="mb-6">
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
           <input
             type="text"
             name="search"
             defaultValue={search}
-            placeholder="🔍 Buscar por nome, CPF, telefone ou email..."
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all md:py-2.5 md:text-sm"
+            placeholder="Buscar por nome, CPF ou telefone..."
+            className="w-full rounded-2xl border border-gray-200 bg-white pl-12 pr-4 py-3.5 text-base shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
           />
-        </form>
-      </div>
+        </div>
+      </form>
 
-      {/* Tabela responsiva */}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <table className="min-w-[450px] w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 hidden md:table-header-group">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nome</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 hidden sm:table-cell">CPF</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Telefone</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 hidden md:table-cell">Email</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Total</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Última Compra</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {clientes.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50 block md:table-row p-4 md:p-0 border-b md:border-b-0">
-                {/* Nome */}
-                <td className="px-4 py-3 block md:table-cell">
-                  <Link href={`/dashboard/clientes/${c.id}`} className="block">
-                    <p className="text-sm font-medium text-gray-900 hover:text-blue-600">{c.nome}</p>
-                    <div className="flex flex-wrap gap-2 mt-1 md:hidden">
-                      {c.cpf && <span className="text-xs text-gray-500">CPF: {c.cpf}</span>}
-                      {c.email && <span className="text-xs text-gray-500">{c.email}</span>}
-                    </div>
-                  </Link>
-                </td>
-                {/* CPF - escondido no mobile */}
-                <td className="px-4 py-3 text-sm text-gray-700 hidden sm:table-cell">{c.cpf || "--"}</td>
-                {/* Telefone */}
-                <td className="px-4 py-3 text-sm text-gray-700 block md:table-cell">
-                  <span className="md:hidden text-xs text-gray-400">Tel: </span>
-                  {c.telefone || "--"}
-                </td>
-                {/* Email - escondido no mobile */}
-                <td className="px-4 py-3 text-sm text-gray-700 hidden md:table-cell">{c.email || "--"}</td>
-                {/* Total Compras */}
-                <td className="px-4 py-3 text-right text-sm text-gray-900 block md:table-cell">
-                  <span className="md:hidden text-xs text-gray-400">Total: </span>
-                  {c.totalCompras > 0 ? formatCurrency(c.totalCompras) : "R$ 0,00"}
-                </td>
-                {/* Última Compra */}
-                <td className="px-4 py-3 text-sm text-gray-500 block md:table-cell">
-                  <span className="md:hidden text-xs text-gray-400">Última compra: </span>
-                  {c.ultimaCompra ? formatDate(c.ultimaCompra) : "--"}
-                </td>
-              </tr>
-            ))}
-            {clientes.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
-                  {search ? "❌ Nenhum resultado encontrado" : "👥 Nenhum cliente cadastrado"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginação */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+      {/* Grid de Cards */}
+      {clientes.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-12 text-center">
+          <p className="text-5xl mb-3">👥</p>
+          <p className="text-gray-500 text-lg">Nenhum cliente encontrado</p>
+          <Link
+            href="/dashboard/clientes/novo"
+            className="mt-4 inline-block text-blue-600 font-medium hover:text-blue-700"
+          >
+            Cadastrar primeiro cliente →
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {clientes.map((c) => (
             <Link
-              key={p}
-              href={`/dashboard/clientes?page=${p}${search ? `&search=${search}` : ""}`}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all ${
-                p === page
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-              }`}
+              key={c.id}
+              href={`/dashboard/clientes/${c.id}`}
+              className="group block rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all active:scale-[0.98]"
             >
-              {p}
+              {/* Avatar e nome */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-lg font-bold text-white shadow-sm">
+                  {c.nome.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                    {c.nome}
+                  </h3>
+                  {c.cpf && (
+                    <p className="text-xs text-gray-400 font-mono">{c.cpf}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Contato */}
+              <div className="space-y-1.5 text-sm">
+                {c.telefone && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-xs">📞</span>
+                    <span>{c.telefone}</span>
+                  </div>
+                )}
+                {c.email && (
+                  <div className="flex items-center gap-2 text-gray-600 truncate">
+                    <span className="text-xs">✉️</span>
+                    <span className="truncate">{c.email}</span>
+                  </div>
+                )}
+                {c.dataNascimento && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-xs">🎂</span>
+                    <span>{new Date(c.dataNascimento).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Resumo */}
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Compras</span>
+                  <span className="font-semibold text-gray-900">
+                    {c._count.transactions} transação{c._count.transactions !== 1 ? "ões" : ""}
+                  </span>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
