@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import QuickCadastroModal from "@/components/QuickCadastroModal";
 
 export default function EditarPreVendaPage() {
   const params = useParams();
@@ -19,6 +20,8 @@ export default function EditarPreVendaPage() {
   const [fornSearching, setFornSearching] = useState(false);
   const [precoCusto, setPrecoCusto] = useState("");
   const [prazoEntrega, setPrazoEntrega] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [modalErro, setModalErro] = useState("");
 
   useEffect(() => {
     async function carregar() {
@@ -165,10 +168,17 @@ export default function EditarPreVendaPage() {
                   </div>
                 )}
                 {fornSearch.trim() && fornResults.length === 0 && !fornSearching && (
-                  <p className="mt-2 text-xs text-gray-400">
-                    Nenhum fornecedor encontrado. Cadastre um em{" "}
-                    <Link href="/dashboard/fornecedores" className="text-blue-600 hover:underline">Fornecedores</Link>.
-                  </p>
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-400">
+                      Nenhum fornecedor encontrado para "{fornSearch}".
+                    </p>
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      + Cadastrar novo fornecedor
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -225,6 +235,37 @@ export default function EditarPreVendaPage() {
           </button>
         </div>
       </div>
+
+      {modalErro && <p className="mt-2 text-sm text-red-600">{modalErro}</p>}
+
+      {showModal && (
+        <QuickCadastroModal
+          tipo="fornecedor"
+          nomeInicial={fornSearch}
+          onClose={() => setShowModal(false)}
+          onConfirm={async (dados) => {
+            setModalErro("");
+            try {
+              const r = await fetch("/api/fornecedores", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  nome: dados.nome,
+                  cnpj: dados.cnpj || null,
+                  contato: dados.contato || null,
+                }),
+              });
+              if (!r.ok) { const d = await r.json(); throw new Error(d.error || "Erro ao cadastrar"); }
+              const created = await r.json();
+              setFornecedor(created);
+              setFornSearch(created.nome);
+              setShowModal(false);
+            } catch (e: any) {
+              setModalErro(e.message);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
