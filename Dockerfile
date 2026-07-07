@@ -31,10 +31,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Copia node_modules completo (standalone já tem boa parte)
+# Necessário para Prisma e todas as suas dependências (ex: effect)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Entrypoint para rodar migrations + seed antes de iniciar
 COPY docker-entrypoint.sh /usr/local/bin/
