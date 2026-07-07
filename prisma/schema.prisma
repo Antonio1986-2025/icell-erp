@@ -1,0 +1,387 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  nome      String
+  slug      String   @unique
+  cnpj      String?
+  telefone  String?
+  email     String?
+  endereco  String?
+  logoUrl   String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users              User[]
+  categories         Category[]
+  productParents     ProductParent[]
+  stockItems         StockItem[]
+  clients            Client[]
+  suppliers          Supplier[]
+  transactions       Transaction[]
+  accountsPayable    AccountPayable[]
+  accountsReceivable AccountReceivable[]
+  recurringExpenses  RecurringExpense[]
+  paymentMethods     PaymentMethod[]
+  documents          Document[]
+  conversations      Conversation[]
+  inspectionReports  InspectionReport[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  nome      String
+  email     String
+  senha     String
+  role      String   @default("VENDEDOR")
+  ativo     Boolean  @default(true)
+  comissao  Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  salesAsSeller            Transaction[]      @relation("SellerSales")
+  salesAsCreator           Transaction[]      @relation("CreatorSales")
+  recurringExpensesCreated RecurringExpense[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  nome        String
+  slug        String
+  hasImei     Boolean  @default(false)
+  hasBattery  Boolean  @default(false)
+  hasSerial   Boolean  @default(false)
+  hasWarranty Boolean  @default(true)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  productParents ProductParent[]
+
+  @@unique([tenantId, slug])
+}
+
+model ProductParent {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  categoriaId    String
+  categoria      Category @relation(fields: [categoriaId], references: [id])
+  nome           String
+  marca          String?
+  modelo         String?
+  tipo           String   @default("NOVO")
+  descricao      String?
+  precoVenda     Float?
+  precoCusto     Float?
+  sku            String?
+  garantiaPadrao Int?
+  especificacoes String?
+  fotos          String?
+  ativo          Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  stockItems       StockItem[]
+  transactionItems TransactionItem[]
+
+  @@index([tenantId, categoriaId])
+}
+
+model StockItem {
+  id                 String      @id @default(cuid())
+  tenantId           String
+  tenant             Tenant      @relation(fields: [tenantId], references: [id])
+  parentId           String
+  parent             ProductParent @relation(fields: [parentId], references: [id])
+  imei               String?
+  serialNumber       String?
+  condicao           String?
+  nivelBateria       Int?
+  status             String      @default("EM_ESTOQUE")
+  cor                String?
+  capacidade         String?
+  precoVenda         Float?
+  precoCusto         Float?
+  fornecedorId       String?
+  fornecedor         Supplier?   @relation(fields: [fornecedorId], references: [id])
+  acessoriosInclusos String?
+  dataEntrada        DateTime    @default(now())
+  dataVenda          DateTime?
+  prazoEntregaDias Int?
+  observacoes     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  transactionItems  TransactionItem[]
+  inspectionReports InspectionReport[]
+
+  @@index([tenantId, parentId])
+  @@index([tenantId, imei])
+  @@index([tenantId, status])
+}
+
+model Client {
+  id              String      @id @default(cuid())
+  tenantId        String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  nome            String
+  cpf             String?
+  rg              String?
+  telefone        String?
+  email           String?
+  endereco        String?
+  dataNascimento  DateTime?
+  observacoes     String?
+  totalCompras    Float       @default(0)
+  ultimaCompra    DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  transactions           Transaction[]
+  accountsReceivable     AccountReceivable[] @relation("ClientReceivables")
+  inspectionReports      InspectionReport[]
+
+  @@index([tenantId, cpf])
+}
+
+model Supplier {
+  id          String      @id @default(cuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  nome        String
+  contato     String?
+  cnpj        String?
+  telefone    String?
+  email       String?
+  prazoMedio  Int?
+  observacoes String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  stockItems   StockItem[]
+  transactions Transaction[]
+
+  @@index([tenantId, cnpj])
+}
+
+model Transaction {
+  id              String      @id @default(cuid())
+  tenantId        String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  tipo            String
+  numero          Int
+  clienteId       String?
+  cliente         Client?     @relation(fields: [clienteId], references: [id])
+  fornecedorId    String?
+  fornecedor      Supplier?   @relation(fields: [fornecedorId], references: [id])
+  vendedorId      String?
+  vendedor        User?       @relation("SellerSales", fields: [vendedorId], references: [id])
+  criadorId       String?
+  prazoEntregaDias Int?
+  criador         User?       @relation("CreatorSales", fields: [criadorId], references: [id])
+  data            DateTime    @default(now())
+  status          String      @default("PENDENTE")
+  subtotal        Float       @default(0)
+  desconto        Float       @default(0)
+  taxaEntrega     Float       @default(0)
+  frete           Float       @default(0)
+  total           Float       @default(0)
+  custoTotal      Float       @default(0)
+  lucro           Float       @default(0)
+  lucroPercentual Float?      @default(0)
+  observacoes     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items              TransactionItem[]
+  documents          Document[]
+  accountsReceivable AccountReceivable[]
+  inspectionReports  InspectionReport[]
+  payments           TransactionPayment[]
+
+  @@unique([tenantId, tipo, numero])
+  @@index([tenantId, tipo])
+  @@index([tenantId, status])
+}
+
+model TransactionItem {
+  id           String         @id @default(cuid())
+  tenantId     String
+  transacaoId  String
+  transacao    Transaction    @relation(fields: [transacaoId], references: [id], onDelete: Cascade)
+  stockItemId  String?
+  stockItem    StockItem?     @relation(fields: [stockItemId], references: [id])
+  parentId     String?
+  parent       ProductParent? @relation(fields: [parentId], references: [id])
+  tipo         String
+  quantidade   Int            @default(1)
+  precoUnit    Float
+  subtotal     Float
+
+  @@index([tenantId, transacaoId])
+}
+
+model TransactionPayment {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  metodo        String
+  valor         Float
+  parcelas      Int         @default(1)
+  createdAt     DateTime    @default(now())
+
+  @@index([transactionId])
+}
+
+model Document {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  tenant               Tenant   @relation(fields: [tenantId], references: [id])
+  transacaoId          String
+  transacao            Transaction @relation(fields: [transacaoId], references: [id])
+  tipo                 String
+  conteudo             String
+  numero               Int
+  qrCodeUrl            String?
+  assinadoDigitalmente Boolean  @default(false)
+  createdAt            DateTime @default(now())
+
+  @@unique([tenantId, tipo, numero])
+}
+
+model AccountPayable {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  descricao      String
+  valor          Float
+  dataVencimento DateTime
+  dataPagamento  DateTime?
+  categoria      String?
+  status         String   @default("PENDENTE")
+  fornecedorId   String?
+  observacoes    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId, status])
+}
+
+model AccountReceivable {
+  id              String      @id @default(cuid())
+  tenantId        String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  descricao       String
+  valor           Float
+  dataVencimento  DateTime
+  dataRecebimento DateTime?
+  categoria       String?
+  status          String      @default("PENDENTE")
+  transacaoId     String?
+  transacao       Transaction? @relation(fields: [transacaoId], references: [id])
+  clienteId       String?
+  cliente         Client?     @relation("ClientReceivables", fields: [clienteId], references: [id])
+  observacoes     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([tenantId, status])
+}
+
+model RecurringExpense {
+  id            String  @id @default(cuid())
+  tenantId      String
+  tenant        Tenant  @relation(fields: [tenantId], references: [id])
+  descricao     String
+  valor         Float
+  diaVencimento Int
+  categoria     String?
+  ativo         Boolean @default(true)
+  responsavelId String?
+  responsavel   User?   @relation(fields: [responsavelId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId, ativo])
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  nome      String
+  tipo      String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, nome])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  clienteId String?
+  contato   String
+  mensagens String?
+  contexto  String?
+  status    String   @default("ABERTA")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, status])
+}
+
+model InspectionReport {
+  id                 String       @id @default(cuid())
+  tenantId           String
+  tenant             Tenant       @relation(fields: [tenantId], references: [id])
+  clienteId          String?
+  cliente            Client?      @relation(fields: [clienteId], references: [id])
+  stockItemId        String?
+  stockItem          StockItem?   @relation(fields: [stockItemId], references: [id])
+  transactionId      String?
+  transaction        Transaction? @relation(fields: [transactionId], references: [id])
+  marca              String?
+  modelo             String?
+  aparelhoNome       String
+  imei               String?
+  serialNumber       String?
+  cor                String?
+  capacidade         String?
+  nivelBateria       Int?
+  condicao           String?
+  fotos              String?
+  checklistResult    String?
+  acessoriosInclusos String?
+  valorEstimado      Float?
+  observacoes        String?
+  status             String       @default("PENDENTE")
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([tenantId, status])
+  @@index([tenantId, imei])
+}
+
+model DeviceModel {
+  id    String @id @default(cuid())
+  brand String
+  tac   String @unique
+  specs String
+
+  @@index([tac])
+}
