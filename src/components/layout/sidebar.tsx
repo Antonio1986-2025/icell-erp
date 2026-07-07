@@ -38,9 +38,10 @@ export default function Sidebar({
     <aside
       className={cn(
         // Desktop: sempre visível, posição fixa
-        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300",
-        // Mobile: escondido por padrão, slide da esquerda quando aberto
-        "-translate-x-full md:translate-x-0 md:static md:z-auto"
+        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 ease-in-out",
+        // Mobile: escondido por padrão (-translate-x-full), slide quando isOpen=true
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        "md:translate-x-0 md:static md:z-auto"
       )}
     >
       {/* Cabeçalho */}
