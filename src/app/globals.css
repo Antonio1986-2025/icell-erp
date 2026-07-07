@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 @theme inline {
@@ -23,4 +25,26 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch-friendly: botões e links têm área de toque mínima */
+button, a, input, select, textarea {
+  font-size: 16px !important; /* Evita zoom automático no iOS */
+}
+
+/* Rolagem suave */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Esconde scrollbar no Chrome/Safari mobile mas mantém funcional */
+@media (max-width: 768px) {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { startOfDay, startOfMonth, endOfMonth } from "date-fns";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -44,31 +45,55 @@ export default async function DashboardPage() {
     }),
   ]);
 
+  const cards = [
+    {
+      titulo: "Vendas Hoje",
+      valor: formatCurrency(vendasHoje._sum.total || 0),
+      cor: "text-green-600",
+      bg: "bg-green-50",
+      link: "/dashboard/vendas",
+    },
+    {
+      titulo: "Produtos em Estoque",
+      valor: String(estoqueCount),
+      cor: "text-blue-600",
+      bg: "bg-blue-50",
+      link: "/dashboard/estoque",
+    },
+    {
+      titulo: "Clientes Cadastrados",
+      valor: String(clientesCount),
+      cor: "text-amber-600",
+      bg: "bg-amber-50",
+      link: "/dashboard/clientes",
+    },
+    {
+      titulo: "Lucro do Mês",
+      valor: formatCurrency(lucroMes._sum.lucro || 0),
+      cor: "text-green-600",
+      bg: "bg-green-50",
+      link: "/dashboard/financeiro",
+    },
+  ];
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-      <p className="mt-2 text-gray-600">Bem-vindo ao iCell ERP</p>
+    <div className="pb-4 md:pb-0">
+      <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Dashboard</h1>
+      <p className="mt-1 text-sm text-gray-500">Bem-vindo ao iCell ERP</p>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-medium text-gray-500">Vendas Hoje</h2>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{formatCurrency(vendasHoje._sum.total || 0)}</p>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-medium text-gray-500">Produtos em Estoque</h2>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{estoqueCount}</p>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-medium text-gray-500">Clientes Cadastrados</h2>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{clientesCount}</p>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-medium text-gray-500">Lucro do Mês</h2>
-          <p className="mt-2 text-3xl font-bold text-green-600">{formatCurrency(lucroMes._sum.lucro || 0)}</p>
-        </div>
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <Link
+            key={card.titulo}
+            href={card.link}
+            className={`rounded-xl border border-gray-200 ${card.bg} p-5 transition active:scale-[0.98] hover:shadow-sm`}
+          >
+            <p className="text-sm font-medium text-gray-500">{card.titulo}</p>
+            <p className={`mt-2 text-2xl font-bold md:text-3xl ${card.cor}`}>
+              {card.valor}
+            </p>
+          </Link>
+        ))}
       </div>
     </div>
   );
