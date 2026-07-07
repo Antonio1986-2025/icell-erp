@@ -5,7 +5,7 @@ echo "🚀 iCell ERP - Entrypoint"
 
 # Rodar migrations no banco PostgreSQL
 echo "⏳ Rodando migrations..."
-npx prisma db push --accept-data-loss
+npx prisma db push --accept-data-loss --skip-generate
 echo "✅ Migrations aplicadas!"
 
 # Rodar seed (só se banco estiver vazio)
