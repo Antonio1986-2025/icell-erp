@@ -1,0 +1,13 @@
+* text=auto
+
+# Shell scripts devem usar LF (Unix)
+*.sh text eol=lf
+
+# Dockerfile deve usar LF
+Dockerfile text eol=lf
+
+# JavaScript/TypeScript podem usar CRLF (Windows) ou LF
+*.{js,ts,tsx,jsx} text eol=lf
+
+# Prisma schema
+*.prisma text eol=lf
