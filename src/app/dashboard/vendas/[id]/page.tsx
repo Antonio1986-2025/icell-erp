@@ -41,11 +41,10 @@ export default function VendaDetalhePage() {
 
   useEffect(() => {
     async function carregar() {
-      const res = await fetch(`/api/vendas`);
+      const res = await fetch(`/api/vendas/${params.id}`);
       if (res.ok) {
         const data = await res.json();
-        const encontrada = data.find((v: any) => v.id === params.id);
-        setVenda(encontrada || null);
+        setVenda(data);
       }
       setLoading(false);
     }

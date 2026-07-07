@@ -97,7 +97,7 @@ export default function ComprasPage() {
 
     try {
       const r = await fetch(`/api/compras/${editando}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
