@@ -109,7 +109,7 @@ export default function PreVendasPage() {
                     )}
                     {pv.status === "RECEBIDA" && (
                       <Link
-                        href={`/dashboard/vendas/pdv`}
+                        href={`/dashboard/vendas/pdv?reserva=${pv.id}`}
                         className="inline-block rounded-md bg-green-600 px-3 py-1 text-xs font-bold text-white hover:bg-green-700"
                       >
                         🛒 Finalizar no PDV

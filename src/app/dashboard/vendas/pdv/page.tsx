@@ -50,6 +50,7 @@ interface ClienteResult {
 export default function PdvPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loadingReserva, setLoadingReserva] = useState(false);
   const [cliente, setCliente] = useState<ClienteResult | null>(null);
   const [clienteSearch, setClienteSearch] = useState("");
   const [clienteResults, setClienteResults] = useState<ClienteResult[]>([]);
@@ -72,6 +73,42 @@ export default function PdvPage() {
   const [reservaSearch, setReservaSearch] = useState("");
   const [reservaResults, setReservaResults] = useState<any[]>([]);
   const [showReservaResults, setShowReservaResults] = useState(false);
+
+  useEffect(() => {
+    // Carrega reserva automaticamente se veio via ?reserva=ID da URL
+    const params = new URLSearchParams(window.location.search);
+    const reservaId = params.get("reserva");
+    if (reservaId) {
+      setAbaAtiva("reservas");
+      setLoadingReserva(true);
+      fetch(`/api/vendas/${reservaId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data.id) {
+            setReservaAtiva(data);
+            if (data.cliente) {
+              setCliente(data.cliente);
+              setClienteSearch(data.cliente.nome);
+            }
+            const item = data.items?.[0];
+            if (item) {
+              setCart([{
+                key: `reserva-${data.id}`,
+                stockItemId: item.stockItem?.id,
+                parentId: item.parent?.id,
+                nome: item.parent?.nome || "Produto",
+                imei: item.stockItem?.imei || undefined,
+                precoUnit: item.stockItem?.precoVenda || item.parent?.precoVenda || 0,
+                quantidade: 1,
+                tipo: "SAIDA",
+              }]);
+            }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingReserva(false));
+    }
+  }, []);
 
   const subtotal = cart
     .filter((i) => i.tipo === "SAIDA")
@@ -382,7 +419,7 @@ export default function PdvPage() {
         </div>
 
         {/* Conteúdo da aba */}
-        {abaAtiva === "reservas" && !reservaAtiva && (
+        {abaAtiva === "reservas" && !reservaAtiva && !loadingReserva && (
           <div className="relative rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Buscar Reserva</h2>
             <input
@@ -416,6 +453,12 @@ export default function PdvPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {loadingReserva && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
+            <p className="text-sm font-medium text-blue-700">⏳ Carregando reserva...</p>
           </div>
         )}
 

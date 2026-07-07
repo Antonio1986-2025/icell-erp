@@ -200,7 +200,7 @@ export default function ReceberPreVendaPage() {
         return;
       }
 
-      router.push("/dashboard/compras");
+      router.push("/dashboard/vendas/pre-vendas");
     } catch {
       setError("Erro ao finalizar pré-venda");
       setSaving(false);
