@@ -5,12 +5,12 @@ echo "🚀 iCell ERP - Entrypoint"
 
 # Rodar migrations no banco PostgreSQL
 echo "⏳ Rodando migrations..."
-./node_modules/.bin/prisma migrate deploy
+npx prisma db push --accept-data-loss
 echo "✅ Migrations aplicadas!"
 
 # Rodar seed (só se banco estiver vazio)
 echo "⏳ Verificando seed..."
-./node_modules/.bin/prisma db seed || echo "⚠️ Seed já foi executado ou falhou (ignorando)"
+npx prisma db seed || echo "⚠️ Seed já foi executado ou falhou (ignorando)"
 echo "✅ Setup concluído!"
 
 # Iniciar o app
