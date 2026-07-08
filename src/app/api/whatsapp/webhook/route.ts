@@ -4,25 +4,27 @@ import { enviarMensagem } from "@/lib/services/whatsapp.service";
 
 /**
  * Webhook chamado pela Evolution API quando chega uma mensagem no WhatsApp
+ * Suporta Evolution API v2.3.7 e versões anteriores
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log("📩 Webhook Evolution:", JSON.stringify(body).slice(0, 500));
+    console.log("📩 Webhook Evolution RECEBIDO:", JSON.stringify(body).slice(0, 1000));
 
-    // Evolution API envia eventos de mensagem com este formato
-    const eventType = body.event || body.type;
-    const data = body.data || body;
+    // Extrair mensagem do formato Evolution API (qualquer versão)
+    const mensagemExtraida = extrairMensagem(body);
 
-    // Só processar mensagens de texto de usuários (ignorar status, QR, etc)
-    if (eventType === "messages.upsert" || data?.key?.remoteJid) {
-      const mensagem = extrairMensagem(body);
-      if (mensagem) {
-        const resposta = await processarMensagem(mensagem);
-        if (resposta) {
-          await enviarMensagem(mensagem.from, resposta);
-        }
+    if (mensagemExtraida) {
+      console.log(`📨 Mensagem de ${mensagemExtraida.nome} (${mensagemExtraida.from}): "${mensagemExtraida.texto}"`);
+      
+      const resposta = await processarMensagem(mensagemExtraida);
+      if (resposta) {
+        console.log(`🤖 Resposta gerada: "${resposta.slice(0, 100)}..."`);
+        const enviado = await enviarMensagem(mensagemExtraida.from, resposta);
+        console.log(`📤 Envio para ${mensagemExtraida.from}: ${enviado ? "SUCESSO" : "FALHA"}`);
       }
+    } else {
+      console.log("⏭️ Evento ignorado (não é mensagem de texto):", body.event || body.type || "desconhecido");
     }
 
     // Sempre retornar 200 pra Evolution não reenviar
@@ -34,25 +36,83 @@ export async function POST(request: NextRequest) {
 }
 
 function extrairMensagem(body: any): MensagemWhatsApp | null {
-  // Formato Evolution API v2
-  if (body.data?.key?.remoteJid && body.data?.message?.conversation) {
-    return {
-      from: body.data.key.remoteJid.replace(/[^0-9]/g, ""),
-      texto: body.data.message.conversation,
-      nome: body.data.pushName || "Cliente",
-      instancia: body.instance || "",
-    };
+  // ─── Evolution API v2.3.7 (formato mais comum) ───
+  // { event: "messages.upsert", instance: "icell", data: { key: {...}, message: {...}, pushName: "..." } }
+
+  // Tentar extrair de body.data (v2)
+  if (body.data) {
+    const data = body.data;
+    // Pular mensagens enviadas pelo próprio bot
+    if (data.key?.fromMe) return null;
+
+    const texto = extrairTexto(data.message);
+    if (texto && data.key?.remoteJid) {
+      return {
+        from: data.key.remoteJid.replace(/[^0-9]/g, ""),
+        texto: texto,
+        nome: data.pushName || data.participant || "Cliente",
+        instancia: body.instance || "",
+      };
+    }
   }
 
-  // Formato Evolution API v1
-  if (body.remoteJid && body.message) {
-    return {
-      from: body.remoteJid.replace(/[^0-9]/g, ""),
-      texto: body.message,
-      nome: body.pushName || "Cliente",
-      instancia: body.instance || "",
-    };
+  // Formato v1 (body direto sem wrapper)
+  // { remoteJid: "...", message: { conversation: "..." } }
+  if (body.remoteJid && !body.key?.fromMe) {
+    const texto = extrairTexto(body.message);
+    if (texto) {
+      return {
+        from: body.remoteJid.replace(/[^0-9]/g, ""),
+        texto: texto,
+        nome: body.pushName || "Cliente",
+        instancia: body.instance || "",
+      };
+    }
   }
+
+  // Formato alternativo: body já é o objeto message direto
+  if (body.key?.remoteJid && !body.key?.fromMe) {
+    const texto = extrairTexto(body.message);
+    if (texto) {
+      return {
+        from: body.key.remoteJid.replace(/[^0-9]/g, ""),
+        texto: texto,
+        nome: body.pushName || "Cliente",
+        instancia: body.instance || "",
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extrai o texto de uma mensagem, independente do formato
+ */
+function extrairTexto(message: any): string | null {
+  if (!message) return null;
+
+  // conversation text
+  if (typeof message === "string") return message;
+  if (message.conversation) return message.conversation;
+  
+  // extended text message
+  if (message.extendedTextMessage?.text) return message.extendedTextMessage.text;
+  
+  // image/video with caption
+  if (message.imageMessage?.caption) return message.imageMessage.caption;
+  if (message.videoMessage?.caption) return message.videoMessage.caption;
+
+  // buttons response
+  if (message.buttonsResponseMessage?.selectedButtonId) return message.buttonsResponseMessage.selectedButtonId;
+  if (message.buttonsResponseMessage?.selectedDisplayText) return message.buttonsResponseMessage.selectedDisplayText;
+
+  // list response
+  if (message.listResponseMessage?.singleSelectReply?.selectedRowId) return message.listResponseMessage.singleSelectReply.selectedRowId;
+  if (message.listResponseMessage?.title) return message.listResponseMessage.title;
+
+  // template
+  if (message.templateMessage?.hydratedTemplate?.hydratedContentText) return message.templateMessage.hydratedTemplate.hydratedContentText;
 
   return null;
 }
