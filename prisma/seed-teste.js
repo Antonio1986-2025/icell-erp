@@ -16,7 +16,9 @@ async function main() {
   // Verificar se já existem produtos
   const produtosExistentes = await prisma.productParent.count({ where: { tenantId: tid } });
   if (produtosExistentes > 0) {
-    console.log(`✅ ${produtosExistentes} produtos já existentes. Pulando geração.`);
+    console.log(`✅ ${produtosExistentes} produtos já existentes. Pulando geração de dados completos.`);
+    // Ainda tenta criar laudos se não existirem
+    await criarLaudos(tid);
     return;
   }
 
@@ -214,6 +216,55 @@ async function main() {
   console.log(`   🏭 Fornecedores: ${await prisma.supplier.count({ where: { tenantId: tid } })}`);
   console.log(`   🛒 Vendas: ${await prisma.transaction.count({ where: { tenantId: tid, tipo: "VENDA" } })}`);
   console.log(`   💳 Contas: ${await prisma.accountPayable.count({ where: { tenantId: tid } })}`);
+
+  // Laudos de teste
+  await criarLaudos(tid);
+}
+
+async function criarLaudos(tid) {
+  const existentes = await prisma.inspectionReport.count({ where: { tenantId: tid } });
+  if (existentes > 0) {
+    console.log(`   📋 ${existentes} laudos já existentes. Pulando.`);
+    return;
+  }
+
+  await prisma.inspectionReport.create({
+    data: {
+      tenantId: tid,
+      aparelhoNome: "iPhone 14 128GB Estelar",
+      marca: "Apple",
+      modelo: "iPhone 14",
+      imei: "358247111222444",
+      serialNumber: "F2LXYZ1234",
+      cor: "Estelar",
+      capacidade: "128GB",
+      nivelBateria: 85,
+      condicao: "COMO_NOVO",
+      valorEstimado: 4500.00,
+      status: "PENDENTE",
+      acessoriosInclusos: ["Carregador", "Caixa", "Documentos"],
+    },
+  });
+  console.log("   📋 Laudo 1: iPhone 14 128GB Estelar (Pendente)");
+
+  await prisma.inspectionReport.create({
+    data: {
+      tenantId: tid,
+      aparelhoNome: "Galaxy S23 256GB Verde",
+      marca: "Samsung",
+      modelo: "Galaxy S23",
+      imei: "358924333555777",
+      serialNumber: "R5KABC5678",
+      cor: "Verde",
+      capacidade: "256GB",
+      nivelBateria: 92,
+      condicao: "BOM",
+      valorEstimado: 2800.00,
+      status: "CONCLUIDO",
+      acessoriosInclusos: ["Carregador", "Cabo USB"],
+    },
+  });
+  console.log("   📋 Laudo 2: Galaxy S23 256GB Verde (Concluído)");
 }
 
 main()
