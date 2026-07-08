@@ -18,10 +18,10 @@ export async function enviarMensagem(para: string, texto: string): Promise<boole
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": EVOLUTION_API_KEY,
+          "apiKey": EVOLUTION_API_KEY,
         },
         body: JSON.stringify({
-          number: para,        // 5567999999999
+          number: para,
           text: texto,
           delay: 1000,
         }),
@@ -54,8 +54,7 @@ export async function marcarLida(remoteJid: string, messageId: string): Promise<
       {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "apikey": EVOLUTION_API_KEY,
+          "apiKey": EVOLUTION_API_KEY,
         },
         body: JSON.stringify({
           remoteJid,
