@@ -62,6 +62,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "IMEI é obrigatório para celulares usados" }, { status: 400 });
   }
 
+  if (categoria.hasImei && body.tipo === "NOVO" && (!body.imeis || body.imeis.filter((i: string) => i?.trim()).length === 0)) {
+    return NextResponse.json({ error: "IMEI é obrigatório para celulares novos" }, { status: 400 });
+  }
+
   const imeisParaValidar: string[] = body.tipo === "USADO"
     ? [body.stockItem?.imei].filter(Boolean)
     : (body.imeis || []).filter((i: string) => i?.trim()).map((i: string) => i.trim());

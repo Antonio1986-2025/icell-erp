@@ -96,6 +96,22 @@ export default function NovoProdutoPage() {
     setLoading(true);
     setError("");
 
+    // Validar IMEI obrigatório
+    if (cat?.hasImei && form.tipo === "NOVO") {
+      const imeis = imeisNovo.map((i) => i.trim()).filter(Boolean);
+      if (imeis.length === 0) {
+        setError("IMEI é obrigatório para celulares. Adicione pelo menos um IMEI.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (cat?.hasImei && form.tipo === "USADO" && !stockItem.imei.trim()) {
+      setError("IMEI é obrigatório para celulares usados.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const body: any = {
         nome: form.nome,
@@ -313,7 +329,7 @@ export default function NovoProdutoPage() {
         {form.tipo === "NOVO" && cat?.hasImei && (
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">IMEIs</h2>
-            <p className="mb-3 text-sm text-gray-500">Adicione os IMEIs dos aparelhos novos (opcional no cadastro)</p>
+            <p className="mb-3 text-sm font-semibold text-red-600">⚠️ IMEI obrigatório para celulares</p>
             {imeisNovo.map((imei, i) => (
               <div key={i} className="mb-2 flex items-center gap-2">
                 <input
