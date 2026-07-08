@@ -242,7 +242,7 @@ async function criarLaudos(tid) {
       condicao: "COMO_NOVO",
       valorEstimado: 4500.00,
       status: "PENDENTE",
-      acessoriosInclusos: ["Carregador", "Caixa", "Documentos"],
+      acessoriosInclusos: "Carregador, Caixa, Documentos",
     },
   });
   console.log("   📋 Laudo 1: iPhone 14 128GB Estelar (Pendente)");
@@ -261,7 +261,7 @@ async function criarLaudos(tid) {
       condicao: "BOM",
       valorEstimado: 2800.00,
       status: "CONCLUIDO",
-      acessoriosInclusos: ["Carregador", "Cabo USB"],
+      acessoriosInclusos: "Carregador, Cabo USB",
     },
   });
   console.log("   📋 Laudo 2: Galaxy S23 256GB Verde (Concluído)");
