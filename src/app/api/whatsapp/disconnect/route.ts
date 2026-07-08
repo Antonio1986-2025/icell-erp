@@ -17,13 +17,12 @@ export async function POST() {
       );
     }
 
-    // Desconecta a instância
+    // Desconecta a instância (DELETE /instance/logout na Evolution v2.3.7)
     const res = await fetch(
       `${EVOLUTION_API_URL}/instance/logout/${EVOLUTION_INSTANCE}`,
       {
-        method: "POST",
+        method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           apiKey: EVOLUTION_API_KEY,
         },
       }

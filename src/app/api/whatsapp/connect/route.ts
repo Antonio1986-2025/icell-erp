@@ -32,13 +32,12 @@ export async function POST() {
       }),
     }).catch(() => {});
 
-    // 2. Conecta e obtém o QR Code
+    // 2. Conecta e obtém o QR Code (GET na Evolution v2.3.7)
     const res = await fetch(
       `${EVOLUTION_API_URL}/instance/connect/${EVOLUTION_INSTANCE}`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           apiKey: EVOLUTION_API_KEY,
         },
       }
@@ -53,7 +52,7 @@ export async function POST() {
     }
 
     const data = await res.json();
-    const qrBase64 = data?.qrcode?.base64 || null;
+    const qrBase64 = data?.base64 || null;
 
     return NextResponse.json({
       instance: EVOLUTION_INSTANCE,

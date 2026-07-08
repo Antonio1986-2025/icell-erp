@@ -21,14 +21,10 @@ export async function GET() {
     const res = await fetch(
       `${EVOLUTION_API_URL}/instance/fetchInstances`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           apiKey: EVOLUTION_API_KEY,
         },
-        body: JSON.stringify({
-          instanceName: EVOLUTION_INSTANCE,
-        }),
       }
     );
 
@@ -42,12 +38,11 @@ export async function GET() {
 
     const data = await res.json();
     const instance = Array.isArray(data)
-      ? data.find((i: any) => i.instance?.instanceName === EVOLUTION_INSTANCE)
-      : data?.instance;
+      ? data.find((i: any) => i.name === EVOLUTION_INSTANCE)
+      : null;
 
-    const connectionState = instance?.instance?.connectionState || "disconnected";
-    const isConnected =
-      connectionState === "open" || instance?.instance?.state === "open";
+    const connectionState = instance?.connectionStatus || "disconnected";
+    const isConnected = connectionState === "open";
 
     return NextResponse.json({
       connected: isConnected,
