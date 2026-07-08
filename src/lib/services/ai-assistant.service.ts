@@ -1,9 +1,12 @@
 import OpenAI from "openai";
 import prisma from "@/lib/prisma";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+// OpenAI client criado sob demanda (lazy) pra não quebrar o build
+function getOpenAI(): OpenAI {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "",
+  });
+}
 
 const SYSTEM_PROMPT = `Você é o assistente virtual da iCell, uma loja de celulares e acessórios.
 
@@ -131,7 +134,7 @@ export async function processarMensagem(mensagem: {
   messages.push({ role: "user", content: texto });
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: messages as any[],
       tools: tools,
@@ -179,7 +182,7 @@ export async function processarMensagem(mensagem: {
       }
 
       // Segunda chamada com o resultado das ferramentas
-      const response2 = await openai.chat.completions.create({
+      const response2 = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: messages as any[],
         max_tokens: 500,
