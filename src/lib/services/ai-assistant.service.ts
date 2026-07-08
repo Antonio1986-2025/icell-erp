@@ -17,11 +17,13 @@ ATENDIMENTO:
 - Se não souber responder algo, seja honesto e peça pra falar com vendedor
 
 REGRAS IMPORTANTES:
-- NÃO invente informações — use apenas o que as funções retornam
+- SEMPRE use as funções disponíveis para consultar o estoque real — NUNCA invente preços ou disponibilidade
+- Antes de dizer que não tem um produto, SEMPRE chame buscar_produtos com o termo relevante
+- Se o cliente perguntar "o que tem?" ou "quais produtos?", chame listar_estoque
 - Preços em REAL (R$)
 - SEMPRE pergunte se o cliente quer algo mais antes de encerrar
 - Se for uma saudação (bom dia, oi, etc), apenas cumprimente e pergunte como pode ajudar
-- Para troca/usado, explique que precisa trazer o aparelho na loja pra avaliação`;
+- Para troca/usado, use a função calcular_troca e explique que precisa trazer o aparelho na loja pra avaliação final`;
 
 // Histórico temporário (em produção: Redis/Banco)
 const historico = new Map<string, any[]>();
@@ -109,6 +111,39 @@ const tools: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "listar_estoque",
+      description: "Lista todos os produtos disponíveis em estoque com preços e quantidades. Use quando o cliente perguntar 'o que tem?', 'quais produtos?', 'mostre o estoque'",
+      parameters: {
+        type: "object",
+        properties: {
+          limite: {
+            type: "number",
+            description: "Quantidade máxima de resultados (padrão: 10)",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "buscar_por_categoria",
+      description: "Busca produtos de uma categoria específica (ex: iPhones, Samsung, Acessórios, Apple Watch, MacBook, AirPods)",
+      parameters: {
+        type: "object",
+        properties: {
+          categoria: {
+            type: "string",
+            description: "Nome da categoria para buscar",
+          },
+        },
+        required: ["categoria"],
+      },
+    },
+  },
 ];
 
 /**
@@ -164,6 +199,12 @@ export async function processarMensagem(mensagem: {
             break;
           case "calcular_troca":
             resultado = await calcularTroca(args);
+            break;
+          case "listar_estoque":
+            resultado = await listarEstoque(args.limite || 10);
+            break;
+          case "buscar_por_categoria":
+            resultado = await buscarPorCategoria(args.categoria);
             break;
           default:
             resultado = { erro: "Função desconhecida" };
@@ -374,5 +415,80 @@ async function calcularTroca(args: { produtoNovo: string; modeloUsado: string; c
   } catch (error) {
     console.error("Erro calcularTroca:", error);
     return { erro: "Erro ao calcular troca" };
+  }
+}
+
+async function listarEstoque(limite: number = 10) {
+  try {
+    const tenant = await prisma.tenant.findFirst();
+    if (!tenant) return { erro: "Nenhuma loja configurada" };
+
+    const produtos = await prisma.productParent.findMany({
+      where: { tenantId: tenant.id, ativo: true },
+      include: {
+        _count: { select: { stockItems: { where: { status: "EM_ESTOQUE" } } } },
+        categoria: { select: { nome: true } },
+      },
+      orderBy: { precoVenda: "asc" },
+      take: limite,
+    });
+
+    if (produtos.length === 0) {
+      return { mensagem: "Nenhum produto disponível no momento", produtos: [] };
+    }
+
+    return {
+      produtos: produtos.map((p) => ({
+        nome: p.nome,
+        marca: p.marca,
+        preco: p.precoVenda,
+        categoria: p.categoria?.nome || "Geral",
+        emEstoque: p._count.stockItems,
+      })),
+    };
+  } catch (error) {
+    console.error("Erro listarEstoque:", error);
+    return { erro: "Erro ao consultar estoque" };
+  }
+}
+
+async function buscarPorCategoria(categoria: string) {
+  try {
+    const tenant = await prisma.tenant.findFirst();
+    if (!tenant) return { erro: "Nenhuma loja configurada" };
+
+    const cat = await prisma.category.findFirst({
+      where: {
+        tenantId: tenant.id,
+        nome: { contains: categoria, mode: "insensitive" },
+      },
+    });
+
+    if (!cat) return { mensagem: `Categoria "${categoria}" não encontrada`, produtos: [] };
+
+    const produtos = await prisma.productParent.findMany({
+      where: { tenantId: tenant.id, categoriaId: cat.id, ativo: true },
+      include: {
+        _count: { select: { stockItems: { where: { status: "EM_ESTOQUE" } } } },
+      },
+      orderBy: { precoVenda: "asc" },
+    });
+
+    if (produtos.length === 0) {
+      return { mensagem: `Nenhum produto na categoria "${categoria}"`, produtos: [] };
+    }
+
+    return {
+      categoria: cat.nome,
+      produtos: produtos.map((p) => ({
+        nome: p.nome,
+        marca: p.marca,
+        preco: p.precoVenda,
+        emEstoque: p._count.stockItems,
+      })),
+    };
+  } catch (error) {
+    console.error("Erro buscarPorCategoria:", error);
+    return { erro: "Erro ao consultar categoria" };
   }
 }
