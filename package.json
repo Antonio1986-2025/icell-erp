@@ -20,6 +20,7 @@
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "next-auth": "^5.0.0-beta.31",
+    "openai": "^6.45.0",
     "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
