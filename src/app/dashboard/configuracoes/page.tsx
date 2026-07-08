@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Tab = "loja" | "categorias" | "usuarios" | "pagamentos";
+type Tab = "loja" | "categorias" | "usuarios" | "pagamentos" | "whatsapp";
 
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<Tab>("loja");
@@ -111,7 +111,7 @@ export default function ConfiguracoesPage() {
 
       {/* Abas responsivas */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
-        {([["loja", "📋 Loja"], ["categorias", "🏷️ Categorias"], ["usuarios", "👥 Usuários"], ["pagamentos", "💳 Pagamentos"]] as [Tab, string][]).map(([key, label]) => (
+        {([["loja", "📋 Loja"], ["categorias", "🏷️ Categorias"], ["usuarios", "👥 Usuários"], ["pagamentos", "💳 Pagamentos"], ["whatsapp", "💬 WhatsApp"]] as [Tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`snap-start shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               tab === key
@@ -337,6 +337,172 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
       )}
+
+      {/* ==================== WHATSAPP ==================== */}
+      {tab === "whatsapp" && <WhatsAppConfig />}
+    </div>
+  );
+}
+
+// ==================== COMPONENTE WHATSAPP ====================
+function WhatsAppConfig() {
+  const [status, setStatus] = useState<"loading" | "disconnected" | "connected" | "error">("loading");
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [connecting, setConnecting] = useState(false);
+
+  async function checkStatus() {
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/whatsapp/status");
+      const data = await res.json();
+      if (data.connected) {
+        setStatus("connected");
+      } else {
+        setStatus("disconnected");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Erro ao verificar status");
+    }
+  }
+
+  async function handleConnect() {
+    setConnecting(true);
+    setQrCode(null);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/whatsapp/connect", { method: "POST" });
+      const data = await res.json();
+      if (data.qrcode) {
+        const src = data.qrcode.startsWith("data:") ? data.qrcode : `data:image/png;base64,${data.qrcode}`;
+        setQrCode(src);
+        setStatus("disconnected");
+      } else if (data.status === "connected" || data.connected) {
+        setStatus("connected");
+      } else {
+        setErrorMsg(data.error || "Erro ao gerar QR Code");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Erro de conexão");
+    }
+    setConnecting(false);
+  }
+
+  async function handleDisconnect() {
+    if (!confirm("Tem certeza que deseja desconectar o WhatsApp?")) return;
+    setConnecting(true);
+    try {
+      await fetch("/api/whatsapp/disconnect", { method: "POST" });
+      setStatus("disconnected");
+      setQrCode(null);
+    } catch {
+      setErrorMsg("Erro ao desconectar");
+    }
+    setConnecting(false);
+  }
+
+  useEffect(() => { checkStatus(); }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">💬 WhatsApp</h2>
+        <p className="mb-6 text-sm text-gray-500">
+          Conecte o WhatsApp da loja para que o agente IA possa atender clientes automaticamente.
+        </p>
+
+        {/* Status */}
+        <div className="mb-6 flex items-center gap-3 rounded-lg bg-gray-50 p-4">
+          <span className="text-lg">
+            {status === "connected" ? "🟢" : status === "loading" ? "🔄" : "🔴"}
+          </span>
+          <div>
+            <p className="text-sm font-medium text-gray-900">
+              {status === "connected" && "WhatsApp Conectado"}
+              {status === "disconnected" && "WhatsApp Desconectado"}
+              {status === "loading" && "Verificando..."}
+              {status === "error" && "Erro na conexão"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {status === "connected"
+                ? "O agente IA está ativo e pronto para atender"
+                : status === "disconnected"
+                  ? "Clique em Conectar para escanear o QR Code"
+                  : "Verifique as configurações da Evolution API"}
+            </p>
+          </div>
+        </div>
+
+        {/* QR Code */}
+        {qrCode && (
+          <div className="mb-6 flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-6">
+            <p className="text-sm font-medium text-blue-700">
+              📱 Escaneie o QR Code com seu WhatsApp
+            </p>
+            <p className="text-xs text-blue-500">
+              Abra o WhatsApp no celular → Configurações → Dispositivos conectados → Conectar
+            </p>
+            <img
+              src={qrCode}
+              alt="QR Code WhatsApp"
+              className="h-64 w-64 rounded-xl border-4 border-white shadow-lg"
+            />
+            <p className="text-xs text-gray-500">
+              Após escanear, o status mudará para "Conectado" automaticamente
+            </p>
+          </div>
+        )}
+
+        {/* Erro */}
+        {errorMsg && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Botões */}
+        <div className="flex flex-wrap gap-3">
+          {status !== "connected" && (
+            <button
+              onClick={handleConnect}
+              disabled={connecting}
+              className="rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/25 hover:bg-green-700 disabled:opacity-50 transition-all active:scale-[0.98]"
+            >
+              {connecting ? "Conectando..." : qrCode ? "🔄 Gerar novo QR Code" : "📱 Conectar WhatsApp"}
+            </button>
+          )}
+
+          {status === "connected" && (
+            <button
+              onClick={handleDisconnect}
+              disabled={connecting}
+              className="rounded-xl border border-red-300 px-6 py-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 transition-all active:scale-[0.98]"
+            >
+              Desconectar
+            </button>
+          )}
+
+          <button
+            onClick={checkStatus}
+            className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98]"
+          >
+            🔄 Atualizar status
+          </button>
+        </div>
+      </div>
+
+      {/* Informações */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <h3 className="mb-3 text-sm font-semibold text-gray-900">ℹ️ Sobre o Agente WhatsApp</h3>
+        <ul className="space-y-2 text-sm text-gray-600">
+          <li>🤖 O agente IA responde automaticamente perguntas sobre <strong>produtos, preços e estoque</strong></li>
+          <li>💬 Clientes podem consultar preços e disponibilidade diretamente pelo WhatsApp</li>
+          <li>🔄 O agente também calcula <strong>troca com laudo</strong> (avaliação de aparelho usado)</li>
+          <li>⚙️ Para alterar o comportamento do agente, edite o arquivo <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">ai-assistant.service.ts</code></li>
+        </ul>
+      </div>
     </div>
   );
 }
