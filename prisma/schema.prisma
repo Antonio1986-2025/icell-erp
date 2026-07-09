@@ -34,6 +34,7 @@ model Tenant {
   documents          Document[]
   conversations      Conversation[]
   inspectionReports  InspectionReport[]
+  supplierCatalogs   SupplierCatalog[]
 }
 
 model User {
@@ -384,4 +385,44 @@ model DeviceModel {
   specs String
 
   @@index([tac])
+}
+
+model SupplierCatalog {
+  id           String              @id @default(cuid())
+  tenantId     String
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  nome         String?
+  fornecedor   String              @default("Fornecedor")
+  arquivoOriginal String
+  tipoArquivo  String
+  status       String              @default("PROCESSANDO")
+  extracaoErro String?
+  totalItens   Int                 @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  items        SupplierCatalogItem[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model SupplierCatalogItem {
+  id          String          @id @default(cuid())
+  tenantId    String
+  catalogId   String
+  catalog     SupplierCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  descricao   String          // Nome completo do produto
+  marca       String?         // APPLE
+  modelo      String?         // iPhone 16 Pro Max
+  capacidade  String?         // 256GB
+  precoUsd    Float           // Preço em dólar
+  codigo      String?         // Código do fornecedor (ex: 11881-1)
+  condicao    String?         // novo / seminovo
+  createdAt   DateTime        @default(now())
+
+  @@index([tenantId])
+  @@index([catalogId])
+  @@index([tenantId, modelo])
+  @@index([tenantId, descricao])
 }

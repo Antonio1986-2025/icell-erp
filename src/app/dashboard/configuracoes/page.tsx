@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Tab = "loja" | "categorias" | "usuarios" | "pagamentos" | "whatsapp";
+type Tab = "loja" | "categorias" | "usuarios" | "pagamentos" | "whatsapp" | "fornecedores";
 
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<Tab>("loja");
@@ -111,7 +111,7 @@ export default function ConfiguracoesPage() {
 
       {/* Abas responsivas */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
-        {([["loja", "📋 Loja"], ["categorias", "🏷️ Categorias"], ["usuarios", "👥 Usuários"], ["pagamentos", "💳 Pagamentos"], ["whatsapp", "💬 WhatsApp"]] as [Tab, string][]).map(([key, label]) => (
+        {([["loja", "📋 Loja"], ["categorias", "🏷️ Categorias"], ["usuarios", "👥 Usuários"], ["pagamentos", "💳 Pagamentos"], ["whatsapp", "💬 WhatsApp"], ["fornecedores", "📦 Fornecedores"]] as [Tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`snap-start shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               tab === key
