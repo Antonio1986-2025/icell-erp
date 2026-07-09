@@ -99,41 +99,9 @@ export async function POST(req: NextRequest) {
       precoCusto: body.precoCusto ? parseFloat(body.precoCusto) : null,
       sku: body.sku || null,
       garantiaPadrao: body.garantiaPadrao ? parseInt(body.garantiaPadrao) : null,
-      ...(body.tipo === "USADO" && body.stockItem
-        ? {
-            stockItems: {
-              create: {
-                tenantId,
-                imei: body.stockItem.imei || undefined,
-                serialNumber: body.stockItem.serialNumber || undefined,
-                cor: body.stockItem.cor || undefined,
-                capacidade: body.stockItem.capacidade || undefined,
-                nivelBateria: body.stockItem.nivelBateria ? parseInt(body.stockItem.nivelBateria) : undefined,
-                condicao: body.stockItem.condicao || undefined,
-                acessoriosInclusos: body.stockItem.acessoriosInclusos || undefined,
-                observacoes: body.stockItem.observacoes || undefined,
-                fornecedorId: body.stockItem.fornecedorId || undefined,
-                status: "EM_ESTOQUE",
-              },
-            },
-          }
-        : {}),
     },
-    include: { categoria: true, stockItems: { take: 3 } },
+    include: { categoria: true },
   });
-
-  if (body.tipo === "NOVO" && body.imeis?.length > 0) {
-    await prisma.stockItem.createMany({
-      data: body.imeis
-        .filter((i: string) => i?.trim())
-        .map((imei: string) => ({
-          tenantId,
-          parentId: produto.id,
-          imei: imei.trim(),
-          status: "EM_ESTOQUE",
-        })),
-    });
-  }
 
   return NextResponse.json({ produto });
 }

@@ -193,7 +193,7 @@ export default function VendaDetalhePage() {
         {/* Botão imprimir */}
         <div className="flex gap-3">
           <Link
-            href={`/imprimir/venda/${venda.id}`}
+            href={`/dashboard/vendas/${venda.id}/imprimir`}
             target="_blank"
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-blue-700 transition-all"
           >
