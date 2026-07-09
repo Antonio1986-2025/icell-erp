@@ -61,6 +61,8 @@ export default function PdvPage() {
   const [searchProd, setSearchProd] = useState("");
   const [prodResults, setProdResults] = useState<ProductSearchResult[]>([]);
   const [showProdSearch, setShowProdSearch] = useState(false);
+  const [prodSearchLoading, setProdSearchLoading] = useState(false);
+  const [prodSearchError, setProdSearchError] = useState("");
   const [desconto, setDesconto] = useState("");
   const [payments, setPayments] = useState<{ metodo: string; valor: number; parcelas: number }[]>([
     { metodo: "DINHEIRO", valor: 0, parcelas: 1 },
@@ -122,12 +124,27 @@ export default function PdvPage() {
   const falta = Math.max(0, total - totalPago);
 
   async function buscarProdutos(q: string) {
-    if (!q.trim()) { setProdResults([]); return; }
-    const res = await fetch(`/api/produtos?search=${encodeURIComponent(q)}`);
-    if (res.ok) {
-      const data = await res.json();
-      setProdResults(data.produtos || []);
+    if (!q.trim()) { setProdResults([]); setShowProdSearch(false); setProdSearchError(""); return; }
+    setProdSearchLoading(true);
+    setProdSearchError("");
+    try {
+      const res = await fetch(`/api/produtos?search=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: "Erro ao buscar" }));
+        setProdSearchError(errData.error || `Erro ${res.status}`);
+        setProdResults([]);
+      } else {
+        const data = await res.json();
+        setProdResults(data.produtos || []);
+        if (!data.produtos?.length) {
+          setProdSearchError("Nenhum produto encontrado para \"" + q + "\"");
+        }
+      }
+    } catch (err) {
+      setProdSearchError("Erro de conexão ao buscar produtos");
+      setProdResults([]);
     }
+    setProdSearchLoading(false);
     setShowProdSearch(true);
   }
 
@@ -513,6 +530,21 @@ export default function PdvPage() {
                     </div>
                   </button>
                 ))}
+              </div>
+            )}
+            {showProdSearch && prodSearchLoading && (
+              <div className="mt-2 rounded-xl border border-gray-200 bg-white p-4 text-center">
+                <p className="text-sm text-gray-500">🔍 Buscando...</p>
+              </div>
+            )}
+            {showProdSearch && !prodSearchLoading && prodResults.length === 0 && prodSearchError && (
+              <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
+                <p className="text-sm text-gray-500">{prodSearchError}</p>
+              </div>
+            )}
+            {showProdSearch && !prodSearchLoading && prodResults.length === 0 && !prodSearchError && searchProd.trim() && (
+              <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
+                <p className="text-sm text-gray-400">Nenhum resultado para "{searchProd}"</p>
               </div>
             )}
           </div>
