@@ -96,12 +96,20 @@ export default function ComprasPage() {
             )}
           </p>
         </div>
-        <Link
-          href="/dashboard/compras/nova"
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95"
-        >
-          + Nova Compra
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard/compras/importar-xml"
+            className="inline-flex items-center gap-2 rounded-2xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all active:scale-95"
+          >
+            📄 Importar XML
+          </Link>
+          <Link
+            href="/dashboard/compras/nova"
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95"
+          >
+            + Nova Compra
+          </Link>
+        </div>
       </div>
 
       {/* Abas */}
