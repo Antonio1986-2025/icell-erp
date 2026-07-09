@@ -130,15 +130,21 @@ export async function POST(request: NextRequest) {
           nome: emit.xNome || "Fornecedor NF",
           cnpj: emit.CNPJ?.replace(/\D/g, "") || null,
           contato: emit.xFantasy || null,
-          ie: emit.IE || null,
         },
       });
     }
 
-    // 2. Transação
+    // 2. Gera número sequencial e cria transação
+    const ultimaTransacao = await prisma.transaction.findFirst({
+      where: { tenantId },
+      orderBy: { numero: "desc" },
+    });
+    const proximoNumero = (ultimaTransacao?.numero || 0) + 1;
+
     const transaction = await prisma.transaction.create({
       data: {
         tenantId,
+        numero: proximoNumero,
         tipo: "COMPRA",
         status: "COMPRA_REALIZADA",
         fornecedorId: fornecedor.id,
@@ -162,13 +168,24 @@ export async function POST(request: NextRequest) {
       });
 
       if (!parent) {
+        // Busca categoria padrão ou cria
+        let categoria = await prisma.category.findFirst({
+          where: { tenantId, nome: "Geral" },
+        });
+        if (!categoria) {
+          const slug = "geral";
+          categoria = await prisma.category.create({
+            data: { tenantId, nome: "Geral", slug, hasImei: false },
+          });
+        }
+
         parent = await prisma.productParent.create({
           data: {
             tenantId,
             nome,
             sku: item.cProd || null,
-            ncm: item.NCM || null,
             precoCusto: vUnit,
+            categoriaId: categoria.id,
           },
         });
       }
@@ -186,9 +203,11 @@ export async function POST(request: NextRequest) {
 
         await prisma.transactionItem.create({
           data: {
-            transactionId: transaction.id,
+            tenantId,
+            transacaoId: transaction.id,
             parentId: parent.id,
             stockItemId: stockItem.id,
+            tipo: "COMPRA",
             quantidade: 1,
             precoUnit: vUnit,
             subtotal: vUnit,
