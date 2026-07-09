@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "openssh"]
+
+[phases.deploy]
+nixPkgs = ["nodejs_20"]
+
+[start]
+cmd = "npx prisma db push --accept-data-loss --skip-generate && node prisma/seed.js || true && node prisma/seed-teste.js || true && next start"
