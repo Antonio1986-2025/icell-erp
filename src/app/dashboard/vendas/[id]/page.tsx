@@ -189,6 +189,17 @@ export default function VendaDetalhePage() {
             <p className="mt-1 text-sm text-amber-700">{venda.observacoes}</p>
           </div>
         )}
+
+        {/* Botão imprimir */}
+        <div className="flex gap-3">
+          <Link
+            href={`/dashboard/vendas/${venda.id}/imprimir`}
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-blue-700 transition-all"
+          >
+            📄 Imprimir Contrato + Garantia
+          </Link>
+        </div>
       </div>
     </div>
   );

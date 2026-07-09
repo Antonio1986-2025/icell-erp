@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35250600000000000000550010000000021000000001" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>00000002</cNF>
+        <natOp>VENDA DE MERCADORIA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>2</nNF>
+        <dhEmi>2025-06-10T14:30:00-03:00</dhEmi>
+        <tpNF>0</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>55667788000199</CNPJ>
+        <xNome>DISTRIBUIDORA X LTDA</xNome>
+        <xFant>DISTRIBUIDORA X</xFant>
+      </emit>
+      <dest>
+        <CNPJ>99888777000199</CNPJ>
+        <xNome>LOJA COMPRADORA LTDA</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>S24U512</cProd>
+          <xProd>Samsung Galaxy S24 Ultra 512GB</xProd>
+          <NCM>85171300</NCM>
+          <CFOP>2101</CFOP>
+          <uCom>UN</uCom>
+          <qCom>3.0000</qCom>
+          <vUnCom>7200.00</vUnCom>
+          <vProd>21600.00</vProd>
+        </prod>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>IP15P128</cProd>
+          <xProd>iPhone 15 Pro 128GB Natural</xProd>
+          <NCM>85171300</NCM>
+          <CFOP>2101</CFOP>
+          <uCom>UN</uCom>
+          <qCom>2.0000</qCom>
+          <vUnCom>5800.00</vUnCom>
+          <vProd>11600.00</vProd>
+        </prod>
+      </det>
+      <det nItem="3">
+        <prod>
+          <cProd>MOTOEDGE40</cProd>
+          <xProd>Motorola Edge 40 Neo 256GB</xProd>
+          <NCM>85171300</NCM>
+          <CFOP>2101</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>1800.00</vUnCom>
+          <vProd>1800.00</vProd>
+        </prod>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>33200.00</vBC>
+          <vProd>35000.00</vProd>
+          <vNF>35000.00</vNF>
+        </ICMSTot>
+      </total>
+    </infNFe>
+  </NFe>
+</nfeProc>
