@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PhoneSearch, { type PhoneModel } from "@/components/PhoneSearch";
 
 type Category = {
   id: string;
@@ -14,6 +15,7 @@ export default function NovoProdutoPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedModel, setSelectedModel] = useState<PhoneModel | null>(null);
 
   const [form, setForm] = useState({
     nome: "",
@@ -36,6 +38,24 @@ export default function NovoProdutoPage() {
 
   function updateForm(updates: Partial<typeof form>) {
     setForm({ ...form, ...updates });
+  }
+
+  function handlePhoneSelect(model: PhoneModel, categoryId: string) {
+    setSelectedModel(model);
+    updateForm({
+      nome: model.nome,
+      marca: model.marca,
+      modelo: model.modelo,
+      categoriaId: categoryId || form.categoriaId,
+    });
+  }
+
+  function handlePhoneClear() {
+    setSelectedModel(null);
+    // só limpa se o nome atual ainda corresponde ao modelo selecionado
+    if (selectedModel && form.nome === selectedModel.nome) {
+      updateForm({ nome: "", marca: "", modelo: "" });
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,7 +100,10 @@ export default function NovoProdutoPage() {
   return (
     <div>
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/produtos" className="text-sm text-blue-600 hover:underline">
+        <Link
+          href="/dashboard/produtos"
+          className="text-sm text-blue-600 hover:underline"
+        >
           Produtos
         </Link>
         <span className="text-gray-400">/</span>
@@ -88,24 +111,49 @@ export default function NovoProdutoPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 max-w-3xl space-y-4">
+        {/* Busca Inteligente */}
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-lg">🔍</span>
+            <p className="text-sm font-medium text-blue-800">
+              Busca Inteligente de Modelos
+            </p>
+          </div>
+          <p className="mb-3 text-xs text-blue-600">
+            Digite o nome do celular e selecione para preencher automaticamente
+          </p>
+          <PhoneSearch
+            categories={categories}
+            onSelect={handlePhoneSelect}
+            onClear={handlePhoneClear}
+            selected={selectedModel}
+          />
+        </div>
+
         {/* Dados Básicos */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados Básicos</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Dados Básicos
+          </h2>
           <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Nome *</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Nome *
+              </label>
               <input
                 type="text"
                 value={form.nome}
                 onChange={(e) => updateForm({ nome: e.target.value })}
                 className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
                 required
-                placeholder='Ex: iPhone 16 Pro Max 256GB'
+                placeholder="Ex: iPhone 16 Pro Max 256GB"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Marca</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Marca
+              </label>
               <input
                 type="text"
                 value={form.marca}
@@ -116,7 +164,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Modelo</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Modelo
+              </label>
               <input
                 type="text"
                 value={form.modelo}
@@ -127,7 +177,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Categoria *</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Categoria *
+              </label>
               <select
                 value={form.categoriaId}
                 onChange={(e) => updateForm({ categoriaId: e.target.value })}
@@ -144,7 +196,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">SKU (opcional)</label>
+              <label className="block text-sm font-medium text-gray-700">
+                SKU (opcional)
+              </label>
               <input
                 type="text"
                 value={form.sku}
@@ -155,7 +209,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Preço de Venda</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Preço de Venda
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -167,7 +223,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Preço de Custo</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Preço de Custo
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -179,7 +237,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Garantia Padrão (dias)</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Garantia Padrão (dias)
+              </label>
               <input
                 type="number"
                 value={form.garantiaPadrao}
@@ -189,7 +249,9 @@ export default function NovoProdutoPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Descrição</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Descrição
+              </label>
               <textarea
                 value={form.descricao}
                 onChange={(e) => updateForm({ descricao: e.target.value })}
@@ -228,8 +290,10 @@ export default function NovoProdutoPage() {
       <div className="mt-6 max-w-3xl rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm font-medium text-blue-800">💡 Importante</p>
         <p className="mt-1 text-sm text-blue-700">
-          O produto será cadastrado no catálogo, mas <strong>não entrará no estoque</strong>.
-          Para adicionar unidades com IMEI, acesse <strong>Compras → Nova Compra</strong> e registre a entrada.
+          O produto será cadastrado no catálogo, mas{" "}
+          <strong>não entrará no estoque</strong>. Para adicionar unidades com
+          IMEI, acesse <strong>Compras → Nova Compra</strong> e registre a
+          entrada.
         </p>
       </div>
     </div>
