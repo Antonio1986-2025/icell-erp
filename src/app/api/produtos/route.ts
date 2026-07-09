@@ -15,10 +15,11 @@ export async function GET(req: NextRequest) {
   const where: any = { tenantId };
   if (search) {
     where.OR = [
-      { nome: { contains: search } },
-      { sku: { contains: search } },
-      { marca: { contains: search } },
-      { modelo: { contains: search } },
+      { nome: { contains: search, mode: "insensitive" } },
+      { sku: { contains: search, mode: "insensitive" } },
+      { marca: { contains: search, mode: "insensitive" } },
+      { modelo: { contains: search, mode: "insensitive" } },
+      { descricao: { contains: search, mode: "insensitive" } },
     ];
   }
 

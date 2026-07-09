@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FornecedoresTab from "@/components/FornecedoresTab";
 
 type Tab = "loja" | "categorias" | "usuarios" | "pagamentos" | "whatsapp" | "fornecedores";
 
@@ -340,6 +341,9 @@ export default function ConfiguracoesPage() {
 
       {/* ==================== WHATSAPP ==================== */}
       {tab === "whatsapp" && <WhatsAppConfig />}
+
+      {/* ==================== FORNECEDORES ==================== */}
+      {tab === "fornecedores" && <FornecedoresTab />}
     </div>
   );
 }
