@@ -87,16 +87,12 @@ export default async function ImprimirVendaPage({
       </head>
       <body>
         <div className="page">
-          <div className="no-print" style={{ textAlign: "center", marginBottom: "5mm" }}>
-            <button onClick={() => window.print()} style={{
-              padding: "8px 24px", fontSize: "14px", cursor: "pointer",
-              background: "#1d4ed8", color: "#fff", border: "none", borderRadius: "8px",
-              fontWeight: "bold"
-            }}>
-              🖨️ Imprimir / Salvar PDF
-            </button>
-            <p style={{ marginTop: "4px", fontSize: "10px", color: "#666" }}>
-              Use Ctrl+P ou o botão acima. Configure margens como "Mínimo" e desmarque cabeçalho/rodapé.
+          <div className="no-print" style={{ textAlign: "center", marginBottom: "5mm", padding: "8px", background: "#f0f4ff", borderRadius: "8px" }}>
+            <p style={{ fontSize: "11px", color: "#1d4ed8", fontWeight: "bold" }}>
+              🖨️ Use Ctrl+P para imprimir ou salvar como PDF
+            </p>
+            <p style={{ marginTop: "2px", fontSize: "9px", color: "#666" }}>
+              Configure margens como "Mínimo" e desmarque cabeçalho/rodapé.
             </p>
           </div>
 
