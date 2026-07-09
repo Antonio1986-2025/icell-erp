@@ -9,14 +9,29 @@ export async function GET(request: NextRequest) {
   const tenantId = (session.user as any).tenantId;
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || "";
+  const tipo = searchParams.get("tipo") || "";
 
-  const where: any = { tenantId, tipo: "VENDA" };
-  if (status === "PENDENTES") {
-    where.status = { in: ["PRE_VENDA", "AGUARDANDO_COMPRA"] };
-  } else if (status) {
-    where.status = status;
-  } else {
+  // Buscar COMPRAS (tipo COMPRA + VENDA com status de compra)
+  const where: any = { tenantId };
+
+  if (tipo === "COMPRA") {
+    where.tipo = "COMPRA";
+  } else if (tipo === "VENDA") {
+    where.tipo = "VENDA";
     where.status = { in: ["PRE_VENDA", "AGUARDANDO_COMPRA", "COMPRA_REALIZADA", "RECEBIDA"] };
+  } else {
+    // Todas: COMPRA + vendas com status de compra
+    where.OR = [
+      { tipo: "COMPRA" },
+      { tipo: "VENDA", status: { in: ["PRE_VENDA", "AGUARDANDO_COMPRA", "COMPRA_REALIZADA", "RECEBIDA"] } },
+    ];
+  }
+
+  if (status) {
+    delete where.OR;
+    delete where.tipo;
+    where.status = status;
+    where.tipo = { in: ["COMPRA", "VENDA"] };
   }
 
   const compras = await prisma.transaction.findMany({
@@ -29,12 +44,12 @@ export async function GET(request: NextRequest) {
       items: {
         include: {
           parent: { select: { nome: true, marca: true, modelo: true } },
+          stockItem: { select: { id: true, imei: true, serialNumber: true, nivelBateria: true, precoVenda: true, status: true } },
         },
       },
-      inspectionReports: { select: { id: true, aparelhoNome: true, valorEstimado: true, imei: true } },
     },
     orderBy: { createdAt: "desc" },
-    take: 50,
+    take: 100,
   });
 
   return NextResponse.json(compras);
