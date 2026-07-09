@@ -18,6 +18,7 @@ interface NFeItem {
   qCom?: number | string;
   vUnCom?: number | string;
   vProd?: number | string;
+  prod?: Record<string, any>;
 }
 
 function parseNFeXML(xmlContent: string) {
@@ -33,10 +34,11 @@ function parseNFeXML(xmlContent: string) {
   const detRaw = infNFe.det || [];
   const total = infNFe.total?.ICMSTot || {};
 
-  // Normaliza det para array
+  // Normaliza det: fields ficam dentro de <prod> na NFe padrão
   const detList: NFeItem[] = Array.isArray(detRaw) ? detRaw : detRaw ? [detRaw] : [];
+  const normalizedDet = detList.map(d => d.prod || d);
 
-  return { ide, emit, det: detList, total };
+  return { ide, emit, det: normalizedDet, total };
 }
 
 export async function POST(request: NextRequest) {
