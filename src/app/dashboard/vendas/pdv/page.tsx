@@ -155,7 +155,8 @@ export default function PdvPage() {
         return;
       }
       if (prod.categoria.hasImei && prod.stockItems.length > 0) {
-      for (const stock of prod.stockItems) {
+        // Adiciona apenas 1 item (primeiro disponível), não todos de uma vez
+        const stock = prod.stockItems[0];
         setCart((prev) => [
           ...prev,
           {
@@ -168,7 +169,6 @@ export default function PdvPage() {
             tipo: "SAIDA",
           },
         ]);
-      }
     } else {
       const existing = cart.find((i) => i.parentId === prod.id && i.tipo === "SAIDA");
       if (existing) {
