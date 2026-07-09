@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35250200000000000000550010000000011000000000" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>00000001</cNF>
+        <natOp>VENDA DE MERCADORIA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>1</nNF>
+        <dhEmi>2025-02-15T10:00:00-03:00</dhEmi>
+        <tpNF>0</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>FORNECEDOR TESTE LTDA</xNome>
+        <xFant>FORNECEDOR TESTE</xFant>
+        <enderEmit>
+          <xLgr>RUA TESTE</xLgr>
+          <nro>100</nro>
+          <xBairro>CENTRO</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>SAO PAULO</xMun>
+          <UF>SP</UF>
+          <CEP>01001000</CEP>
+        </enderEmit>
+      </emit>
+      <dest>
+        <CNPJ>99888777000199</CNPJ>
+        <xNome>LOJA COMPRADORA LTDA</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>IPHONE16PM</cProd>
+          <xProd>iPhone 16 Pro Max 256GB Titânio Deserto</xProd>
+          <NCM>85171300</NCM>
+          <CFOP>2101</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>8500.00</vUnCom>
+          <vProd>8500.00</vProd>
+          <cEAN>SEM GTIN</cEAN>
+        </prod>
+        <imposto>
+          <vTotTrib>2210.00</vTotTrib>
+        </imposto>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>IPHONE16P</cProd>
+          <xProd>iPhone 16 Pro 128GB Preto</xProd>
+          <NCM>85171300</NCM>
+          <CFOP>2101</CFOP>
+          <uCom>UN</uCom>
+          <qCom>2.0000</qCom>
+          <vUnCom>6500.00</vUnCom>
+          <vProd>13000.00</vProd>
+          <cEAN>SEM GTIN</cEAN>
+        </prod>
+        <imposto>
+          <vTotTrib>3380.00</vTotTrib>
+        </imposto>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>21500.00</vBC>
+          <vICMS>3870.00</vICMS>
+          <vProd>21500.00</vProd>
+          <vNF>21500.00</vNF>
+          <vTotTrib>5590.00</vTotTrib>
+        </ICMSTot>
+      </total>
+      <transp>
+        <modFrete>0</modFrete>
+      </transp>
+      <pag>
+        <detPag>
+          <tPag>01</tPag>
+          <vPag>21500.00</vPag>
+        </detPag>
+      </pag>
+    </infNFe>
+    <infNFeSupl>
+      <qrCode>https://www.sefaz.gov.br/qrcode?chave=35250200000000000000550010000000011000000000</qrCode>
+    </infNFeSupl>
+  </NFe>
+  <protNFe>
+    <infProt>
+      <tpAmb>1</tpAmb>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+      <chNFe>35250200000000000000550010000000011000000000</chNFe>
+      <dhRecbto>2025-02-15T10:05:00-03:00</dhRecbto>
+      <nProt>135250000000001</nProt>
+    </infProt>
+  </protNFe>
+</nfeProc>

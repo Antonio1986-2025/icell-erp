@@ -75,14 +75,14 @@ export async function POST(request: NextRequest) {
     // Preview (não salva)
     if (!confirmar) {
       const fornecedorExistente = await prisma.supplier.findFirst({
-        where: { tenantId, cnpj: emit.CNPJ?.replace(/\D/g, "") || "" },
+        where: { tenantId, cnpj: String(emit.CNPJ || "").replace(/\D/g, "") || "" },
       });
 
       return NextResponse.json({
         preview: true,
         isSaida: !isEntrada,
         fornecedor: {
-          cnpj: emit.CNPJ || "",
+          cnpj: String(emit.CNPJ || ""),
           nome: emit.xNome || "",
           fantasia: emit.xFantasy || emit.xNome || "",
           ie: emit.IE || "",
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     if (!fornecedor && emit.CNPJ) {
       fornecedor = await prisma.supplier.findFirst({
-        where: { tenantId, cnpj: emit.CNPJ.replace(/\D/g, "") },
+        where: { tenantId, cnpj: String(emit.CNPJ || "").replace(/\D/g, "") },
       });
     }
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         data: {
           tenantId,
           nome: emit.xNome || "Fornecedor NF",
-          cnpj: emit.CNPJ?.replace(/\D/g, "") || null,
+          cnpj: String(emit.CNPJ || "").replace(/\D/g, "") || null,
           contato: emit.xFantasy || null,
         },
       });
