@@ -149,7 +149,12 @@ export default function PdvPage() {
   }
 
   function addToCart(prod: ProductSearchResult) {
-    if (prod.categoria.hasImei && prod.stockItems.length > 0) {
+      // Verificar se tem estoque
+      if (prod._count.stockItems === 0 && prod.stockItems.length === 0) {
+        setProdSearchError(`"${prod.nome}" está sem estoque`);
+        return;
+      }
+      if (prod.categoria.hasImei && prod.stockItems.length > 0) {
       for (const stock of prod.stockItems) {
         setCart((prev) => [
           ...prev,
@@ -528,6 +533,9 @@ export default function PdvPage() {
                         {p.precoVenda ? formatCurrency(p.precoVenda) : "—"}
                       </p>
                     </div>
+                    {p._count.stockItems === 0 && p.stockItems.length === 0 && (
+                      <p className="mt-1 text-xs font-bold text-red-500">🚫 Sem estoque</p>
+                    )}
                   </button>
                 ))}
               </div>
