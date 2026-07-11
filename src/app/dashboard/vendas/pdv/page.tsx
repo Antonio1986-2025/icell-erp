@@ -63,6 +63,12 @@ export default function PdvPage() {
   const [showProdSearch, setShowProdSearch] = useState(false);
   const [prodSearchLoading, setProdSearchLoading] = useState(false);
   const [prodSearchError, setProdSearchError] = useState("");
+
+  // Scanner de IMEI
+  const [searchImei, setSearchImei] = useState("");
+  const [imeiSearchResult, setImeiSearchResult] = useState<any | null>(null);
+  const [imeiSearchLoading, setImeiSearchLoading] = useState(false);
+  const [imeiSearchError, setImeiSearchError] = useState("");
   const [desconto, setDesconto] = useState("");
   const [payments, setPayments] = useState<{ metodo: string; valor: number; parcelas: number }[]>([
     { metodo: "DINHEIRO", valor: 0, parcelas: 1 },
@@ -148,6 +154,63 @@ export default function PdvPage() {
     setShowProdSearch(true);
   }
 
+  // Scanner de IMEI - busca item de estoque pelo IMEI digitado/escaneado
+  async function handleImeiScan(imei: string) {
+    setSearchImei(imei);
+    setImeiSearchError("");
+    // Só busca com 8+ dígitos (IMEI tem 15, mas aceita parciais)
+    const imeiClean = imei.replace(/\D/g, "");
+    if (imeiClean.length < 8) {
+      setImeiSearchResult(null);
+      setImeiSearchLoading(false);
+      return;
+    }
+    setImeiSearchLoading(true);
+    setImeiSearchResult(null);
+    try {
+      const res = await fetch(`/api/stock/lookup?imei=${encodeURIComponent(imeiClean)}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setImeiSearchError("IMEI não encontrado no estoque");
+        } else {
+          setImeiSearchError("Erro ao buscar IMEI");
+        }
+        setImeiSearchResult(null);
+      } else {
+        const data = await res.json();
+        setImeiSearchResult(data);
+        if (data.status !== "EM_ESTOQUE") {
+          setImeiSearchError("");
+        }
+      }
+    } catch {
+      setImeiSearchError("Erro de conexão");
+      setImeiSearchResult(null);
+    }
+    setImeiSearchLoading(false);
+  }
+
+  function addImeiToCart(stock: any) {
+    if (stock.status !== "EM_ESTOQUE") return;
+    const nomeProd = stock.parent?.nome || "Produto";
+    setCart((prev) => [
+      ...prev,
+      {
+        key: `${stock.id}-imei-${Date.now()}`,
+        stockItemId: stock.id,
+        nome: `${nomeProd} ${stock.cor ? `(${stock.cor})` : ""} ${stock.capacidade || ""}`,
+        imei: stock.imei || undefined,
+        precoUnit: stock.precoVenda || stock.parent?.precoVenda || 0,
+        quantidade: 1,
+        tipo: "SAIDA",
+      },
+    ]);
+    // Limpa scanner
+    setSearchImei("");
+    setImeiSearchResult(null);
+    setImeiSearchError("");
+  }
+
   function addToCart(prod: ProductSearchResult) {
       // Verificar se tem estoque
       if (prod._count.stockItems === 0 && prod.stockItems.length === 0) {
@@ -194,6 +257,27 @@ export default function PdvPage() {
     setShowProdSearch(false);
     setSearchProd("");
     setProdResults([]);
+  }
+
+  function addStockToCart(prod: ProductSearchResult, stock: ProductSearchResult["stockItems"][0]) {
+    if (prod.categoria.hasImei) {
+      // Adiciona o item de estoque específico selecionado pelo usuário
+      setCart((prev) => [
+        ...prev,
+        {
+          key: `${stock.id}-${Date.now()}-${Math.random()}`,
+          stockItemId: stock.id,
+          nome: `${prod.nome} ${stock.cor ? `(${stock.cor})` : ""} ${stock.capacidade || ""}`,
+          imei: stock.imei || undefined,
+          precoUnit: stock.precoVenda || prod.precoVenda || 0,
+          quantidade: 1,
+          tipo: "SAIDA",
+        },
+      ]);
+      setShowProdSearch(false);
+      setSearchProd("");
+      setProdResults([]);
+    }
   }
 
   function removeFromCart(key: string) {
@@ -506,6 +590,55 @@ export default function PdvPage() {
         {abaAtiva === "produtos" && (
           <div className="relative rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="mb-2 text-sm font-bold uppercase text-gray-700">Adicionar Produto</h2>
+
+            {/* Scanner de IMEI - estilo Odoo */}
+            <div className="relative mb-3">
+              <input
+                type="text"
+                id="imei-scanner-input"
+                value={searchImei}
+                onChange={(e) => handleImeiScan(e.target.value)}
+                placeholder="📷 Escaneie ou digite o IMEI..."
+                className="w-full rounded-xl border-2 border-blue-300 bg-blue-50 px-4 py-3 text-base font-mono tracking-wider focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+                autoComplete="off"
+              />
+              {imeiSearchLoading && (
+                <p className="mt-1 text-xs text-blue-600">🔍 Buscando IMEI...</p>
+              )}
+              {imeiSearchResult && (
+                <div className={`mt-2 rounded-xl border p-3 ${imeiSearchResult.status === 'EM_ESTOQUE' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                  {imeiSearchResult.status === 'EM_ESTOQUE' ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">{imeiSearchResult.parent?.nome}</p>
+                        <p className="text-xs text-gray-600">
+                          <span className="font-mono">{imeiSearchResult.imei}</span>
+                          {imeiSearchResult.cor && <span className="ml-2">📱 {imeiSearchResult.cor}</span>}
+                          {imeiSearchResult.capacidade && <span className="ml-1">{imeiSearchResult.capacidade}</span>}
+                        </p>
+                        <p className="text-sm font-bold text-green-700 mt-1">
+                          {imeiSearchResult.precoVenda ? formatCurrency(imeiSearchResult.precoVenda) : "Preço não definido"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => addImeiToCart(imeiSearchResult)}
+                        className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700 active:scale-95 transition-all"
+                      >
+                        + Adicionar
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-red-600 font-medium">
+                      ❌ IMEI {imeiSearchResult.status === 'VENDIDO' ? 'já foi vendido' : 'não está disponível'}
+                    </p>
+                  )}
+                </div>
+              )}
+              {imeiSearchError && (
+                <p className="mt-1 text-xs text-red-500">{imeiSearchError}</p>
+              )}
+            </div>
+
             <input
               type="text"
               value={searchProd}
@@ -516,27 +649,60 @@ export default function PdvPage() {
             {showProdSearch && prodResults.length > 0 && (
               <div className="mt-2 max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
                 {prodResults.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => addToCart(p)}
-                    className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-sm font-medium text-gray-900 truncate">{p.nome}</p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {p.marca} {p.modelo} | {p.categoria.nome}
-                          {p.stockItems.length > 0 && ` | ${p.stockItems.length} em estoque`}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900 shrink-0">
-                        {p.precoVenda ? formatCurrency(p.precoVenda) : "—"}
-                      </p>
-                    </div>
-                    {p._count.stockItems === 0 && p.stockItems.length === 0 && (
-                      <p className="mt-1 text-xs font-bold text-red-500">🚫 Sem estoque</p>
+                  <div key={p.id}>
+                    {p.categoria.hasImei && p.stockItems.length > 0 ? (
+                      <>
+                        <div className="border-b border-gray-100 px-4 py-2 bg-gray-50">
+                          <p className="text-sm font-medium text-gray-900">{p.nome}</p>
+                          <p className="text-xs text-gray-500">
+                            {p.marca} {p.modelo} | {p.categoria.nome} | {p.stockItems.length} un. disponíveis
+                          </p>
+                        </div>
+                        {p.stockItems.map((stock) => (
+                          <button
+                            key={stock.id}
+                            onClick={() => addStockToCart(p, stock)}
+                            className="w-full border-b border-gray-100 px-4 py-2.5 pl-8 text-left hover:bg-blue-50 transition-colors flex items-center justify-between"
+                          >
+                            <div className="flex-1 min-w-0 pr-2">
+                              <p className="text-sm text-gray-800">
+                                <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{stock.imei || "—"}</span>
+                                {stock.cor && <span className="ml-2">📱 {stock.cor}</span>}
+                                {stock.capacidade && <span className="ml-1 text-gray-500">{stock.capacidade}</span>}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {stock.condicao === "NOVO" ? "🆕 Novo" : "🔄 Usado"}
+                              </p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 shrink-0">
+                              {stock.precoVenda ? formatCurrency(stock.precoVenda) : (p.precoVenda ? formatCurrency(p.precoVenda) : "—")}
+                            </p>
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => addToCart(p)}
+                        className="w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="text-sm font-medium text-gray-900 truncate">{p.nome}</p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {p.marca} {p.modelo} | {p.categoria.nome}
+                              {p.stockItems.length > 0 && ` | ${p.stockItems.length} em estoque`}
+                            </p>
+                          </div>
+                          <p className="text-sm font-bold text-gray-900 shrink-0">
+                            {p.precoVenda ? formatCurrency(p.precoVenda) : "—"}
+                          </p>
+                        </div>
+                        {p._count.stockItems === 0 && p.stockItems.length === 0 && (
+                          <p className="mt-1 text-xs font-bold text-red-500">🚫 Sem estoque</p>
+                        )}
+                      </button>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             )}

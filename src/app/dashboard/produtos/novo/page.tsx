@@ -23,12 +23,13 @@ export default function NovoProdutoPage() {
     modelo: "",
     categoriaId: "",
     tipo: "NOVO",
-    precoVenda: "",
-    precoCusto: "",
     sku: "",
-    garantiaPadrao: "90",
-    descricao: "",
   });
+
+  const [especificacoes, setEspecificacoes] = useState<{
+    capacidades: string[];
+    cores: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/categorias")
@@ -37,31 +38,51 @@ export default function NovoProdutoPage() {
   }, []);
 
   function updateForm(updates: Partial<typeof form>) {
-    setForm({ ...form, ...updates });
+    setForm((prev) => ({ ...prev, ...updates }));
   }
 
   function handlePhoneSelect(model: PhoneModel, categoryId: string) {
     setSelectedModel(model);
-    updateForm({
+    setForm((prev) => ({
+      ...prev,
       nome: model.nome,
       marca: model.marca,
-      modelo: model.modelo,
-      categoriaId: categoryId || form.categoriaId,
+      modelo: model.codigoModelo,
+      categoriaId: categoryId || prev.categoriaId,
+    }));
+    setEspecificacoes({
+      capacidades: model.capacidades,
+      cores: model.cores,
     });
   }
 
   function handlePhoneClear() {
     setSelectedModel(null);
-    // só limpa se o nome atual ainda corresponde ao modelo selecionado
-    if (selectedModel && form.nome === selectedModel.nome) {
-      updateForm({ nome: "", marca: "", modelo: "" });
-    }
+    setEspecificacoes(null);
+    setForm((prev) => {
+      // só limpa se o nome atual ainda corresponde ao modelo selecionado
+      if (selectedModel && prev.nome === selectedModel.nome) {
+        return { ...prev, nome: "", marca: "", modelo: "" };
+      }
+      return prev;
+    });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setLoading(true);
     setError("");
+
+    // Validações
+    if (!form.nome.trim()) {
+      setError("O nome do produto é obrigatório");
+      setLoading(false);
+      return;
+    }
+    if (!form.categoriaId) {
+      setError("Selecione uma categoria");
+      setLoading(false);
+      return;
+    }
 
     try {
       const body: any = {
@@ -70,11 +91,10 @@ export default function NovoProdutoPage() {
         modelo: form.modelo || null,
         categoriaId: form.categoriaId,
         tipo: form.tipo,
-        precoVenda: form.precoVenda ? parseFloat(form.precoVenda) : null,
-        precoCusto: form.precoCusto ? parseFloat(form.precoCusto) : null,
+        precoVenda: null,
+        precoCusto: null,
         sku: form.sku || null,
-        garantiaPadrao: form.garantiaPadrao ? parseInt(form.garantiaPadrao) : null,
-        descricao: form.descricao || null,
+        especificacoes: especificacoes ? JSON.stringify(especificacoes) : null,
       };
 
       const res = await fetch("/api/produtos", {
@@ -85,16 +105,16 @@ export default function NovoProdutoPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Erro ao criar");
+        setError(data.error || "Erro ao criar produto");
         setLoading(false);
         return;
       }
 
       router.push("/dashboard/produtos");
-    } catch {
-      setError("Erro ao criar produto");
+    } catch (err) {
+      setError("Erro ao criar produto: " + (err instanceof Error ? err.message : "Erro desconhecido"));
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -110,7 +130,7 @@ export default function NovoProdutoPage() {
         <h1 className="text-2xl font-bold text-gray-900">Novo Produto</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 max-w-3xl space-y-4">
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="mt-6 max-w-3xl space-y-4">
         {/* Busca Inteligente */}
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <div className="mb-2 flex items-center gap-2">
@@ -146,7 +166,7 @@ export default function NovoProdutoPage() {
                 onChange={(e) => updateForm({ nome: e.target.value })}
                 className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
                 required
-                placeholder="Ex: iPhone 16 Pro Max 256GB"
+                placeholder="Ex: iPhone 16"
               />
             </div>
 
@@ -195,7 +215,7 @@ export default function NovoProdutoPage() {
               </select>
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">
                 SKU (opcional)
               </label>
@@ -207,58 +227,6 @@ export default function NovoProdutoPage() {
                 placeholder="EAN/GTIN"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Preço de Venda
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.precoVenda}
-                onChange={(e) => updateForm({ precoVenda: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-                placeholder="0,00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Preço de Custo
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.precoCusto}
-                onChange={(e) => updateForm({ precoCusto: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-                placeholder="0,00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Garantia Padrão (dias)
-              </label>
-              <input
-                type="number"
-                value={form.garantiaPadrao}
-                onChange={(e) => updateForm({ garantiaPadrao: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Descrição
-              </label>
-              <textarea
-                value={form.descricao}
-                onChange={(e) => updateForm({ descricao: e.target.value })}
-                rows={3}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
           </div>
         </div>
 
@@ -266,9 +234,10 @@ export default function NovoProdutoPage() {
 
         <div className="flex items-center gap-4 flex-wrap">
           <button
-            type="submit"
+            type="button"
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            onClick={handleSubmit}
+            className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Salvando..." : "Salvar Produto"}
           </button>

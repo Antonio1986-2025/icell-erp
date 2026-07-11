@@ -111,6 +111,7 @@ model StockItem {
   serialNumber       String?
   condicao           String?
   nivelBateria       Int?
+  /// EM_ESTOQUE | VENDIDO | RESERVADO | EM_GARANTIA | PERDA
   status             String      @default("EM_ESTOQUE")
   cor                String?
   capacidade         String?
@@ -121,10 +122,16 @@ model StockItem {
   acessoriosInclusos String?
   dataEntrada        DateTime    @default(now())
   dataVenda          DateTime?
-  prazoEntregaDias Int?
-  observacoes     String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  prazoEntregaDias   Int?
+  /// Data de fim da garantia (calculada de dataEntrada + garantiaPadrao do produto, ou manual)
+  dataFimGarantia    DateTime?
+  /// Última transação que envolveu este item (venda, troca, garantia)
+  ultimaTransacaoId  String?
+  /// Tipo da última transação: VENDA | TROCA | GARANTIA | ENTRADA
+  ultimaTransacaoTipo String?
+  observacoes        String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   transactionItems  TransactionItem[]
   inspectionReports InspectionReport[]

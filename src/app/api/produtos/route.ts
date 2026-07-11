@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       { marca: { contains: search, mode: "insensitive" } },
       { modelo: { contains: search, mode: "insensitive" } },
       { descricao: { contains: search, mode: "insensitive" } },
+      { stockItems: { some: { imei: { contains: search, mode: "insensitive" } } } },
     ];
   }
 
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
         _count: { select: { stockItems: true } },
         stockItems: {
           where: { status: "EM_ESTOQUE" },
-          select: { id: true, imei: true, cor: true, capacidade: true, condicao: true },
+          select: { id: true, imei: true, cor: true, capacidade: true, condicao: true, precoVenda: true },
           take: 5,
         },
       },
@@ -59,30 +60,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Categoria não encontrada" }, { status: 400 });
   }
 
-  if (categoria.hasImei && body.tipo === "USADO" && !body.stockItem?.imei) {
-    return NextResponse.json({ error: "IMEI é obrigatório para celulares usados" }, { status: 400 });
-  }
+  if (body.stockItem || body.imeis) {
+    if (categoria.hasImei && body.tipo === "USADO" && !body.stockItem?.imei) {
+      return NextResponse.json({ error: "IMEI é obrigatório para celulares usados" }, { status: 400 });
+    }
 
-  if (categoria.hasImei && body.tipo === "NOVO" && (!body.imeis || body.imeis.filter((i: string) => i?.trim()).length === 0)) {
-    return NextResponse.json({ error: "IMEI é obrigatório para celulares novos" }, { status: 400 });
-  }
+    if (categoria.hasImei && body.tipo === "NOVO" && (!body.imeis || body.imeis.filter((i: string) => i?.trim()).length === 0)) {
+      return NextResponse.json({ error: "IMEI é obrigatório para celulares novos" }, { status: 400 });
+    }
 
-  const imeisParaValidar: string[] = body.tipo === "USADO"
-    ? [body.stockItem?.imei].filter(Boolean)
-    : (body.imeis || []).filter((i: string) => i?.trim()).map((i: string) => i.trim());
+    const imeisParaValidar: string[] = body.tipo === "USADO"
+      ? [body.stockItem?.imei].filter(Boolean)
+      : (body.imeis || []).filter((i: string) => i?.trim()).map((i: string) => i.trim());
 
-  if (imeisParaValidar.length > 0) {
-    const existentes = await prisma.stockItem.findMany({
-      where: { tenantId, imei: { in: imeisParaValidar } },
-      select: { imei: true },
-    });
+    if (imeisParaValidar.length > 0) {
+      const existentes = await prisma.stockItem.findMany({
+        where: { tenantId, imei: { in: imeisParaValidar } },
+        select: { imei: true },
+      });
 
-    if (existentes.length > 0) {
-      const duplicados = existentes.map((e) => e.imei).join(", ");
-      return NextResponse.json(
-        { error: `IMEI(s) já cadastrado(s): ${duplicados}` },
-        { status: 400 }
-      );
+      if (existentes.length > 0) {
+        const duplicados = existentes.map((e) => e.imei).join(", ");
+        return NextResponse.json(
+          { error: `IMEI(s) já cadastrado(s): ${duplicados}` },
+          { status: 400 }
+        );
+      }
     }
   }
 
@@ -99,6 +102,7 @@ export async function POST(req: NextRequest) {
       precoCusto: body.precoCusto ? parseFloat(body.precoCusto) : null,
       sku: body.sku || null,
       garantiaPadrao: body.garantiaPadrao ? parseInt(body.garantiaPadrao) : null,
+      especificacoes: body.especificacoes || null,
     },
     include: { categoria: true },
   });

@@ -7,9 +7,11 @@ type Category = { id: string; nome: string };
 
 export type PhoneModel = {
   marca: string;
-  modelo: string;
   nome: string;
+  codigoModelo: string;
   categoria: string;
+  capacidades: string[];
+  cores: string[];
 };
 
 type Props = {
@@ -17,6 +19,12 @@ type Props = {
   onSelect: (model: PhoneModel, categoryId: string) => void;
   onClear: () => void;
   selected: PhoneModel | null;
+};
+
+type BrandEntry = {
+  marca: string;
+  categoria: string;
+  modelos: { nome: string; codigoModelo: string; capacidades: string[]; cores: string[] }[];
 };
 
 function highlightMatch(text: string, query: string) {
@@ -42,7 +50,23 @@ export default function PhoneSearch({ categories, onSelect, onClear, selected }:
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const allModels = useMemo(() => phoneModels as PhoneModel[], []);
+  const allModels = useMemo(() => {
+    const brands = phoneModels as BrandEntry[];
+    const flat: PhoneModel[] = [];
+    for (const brand of brands) {
+      for (const model of brand.modelos) {
+        flat.push({
+          marca: brand.marca,
+          nome: model.nome,
+          codigoModelo: model.codigoModelo,
+          categoria: brand.categoria,
+          capacidades: model.capacidades,
+          cores: model.cores,
+        });
+      }
+    }
+    return flat;
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -57,7 +81,7 @@ export default function PhoneSearch({ categories, onSelect, onClear, selected }:
         (m) =>
           m.nome.toLowerCase().includes(q) ||
           m.marca.toLowerCase().includes(q) ||
-          m.modelo.toLowerCase().includes(q),
+          m.codigoModelo.toLowerCase().includes(q),
       )
       .slice(0, 12);
     setResults(filtered);
@@ -144,7 +168,7 @@ export default function PhoneSearch({ categories, onSelect, onClear, selected }:
         <ul className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-72 overflow-y-auto">
           {results.map((model, i) => (
             <li
-              key={`${model.modelo}-${model.nome}-${i}`}
+              key={`${model.codigoModelo}-${model.nome}-${i}`}
               onClick={() => selectModel(model)}
               onMouseEnter={() => setHighlightIndex(i)}
               className={`cursor-pointer px-4 py-2.5 text-sm transition-colors ${
@@ -161,10 +185,18 @@ export default function PhoneSearch({ categories, onSelect, onClear, selected }:
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-gray-400 w-16 shrink-0">
-                  {model.modelo}
+                  {model.codigoModelo}
                 </span>
                 <span className="text-xs text-gray-400">
                   Categoria: {model.categoria}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-gray-500">
+                  Cores: {model.cores.slice(0, 4).join(", ")}{model.cores.length > 4 ? "..." : ""}
+                </span>
+                <span className="text-xs text-gray-400 ml-2">
+                  · {model.capacidades.join(", ")}
                 </span>
               </div>
             </li>
@@ -177,7 +209,6 @@ export default function PhoneSearch({ categories, onSelect, onClear, selected }:
           <span>✓ Modelo selecionado:</span>
           <span className="font-medium">{selected.marca}</span>
           <span>{selected.nome}</span>
-          <span className="text-gray-400">({selected.modelo})</span>
           <button
             type="button"
             onClick={handleClear}

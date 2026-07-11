@@ -135,6 +135,9 @@ export async function POST(request: NextRequest) {
           data: {
             status: "VENDIDO",
             dataVenda: new Date(),
+            ultimaTransacaoId: transacao.id,
+            ultimaTransacaoTipo: "VENDA",
+            dataFimGarantia: null, // será definido manualmente ou via regra de negócio
           },
         });
       }
