@@ -192,6 +192,11 @@ export default function PdvPage() {
 
   function addImeiToCart(stock: any) {
     if (stock.status !== "EM_ESTOQUE") return;
+    // 🚫 Impede adicionar o mesmo IMEI mais de uma vez
+    if (cart.some((i) => i.stockItemId === stock.id)) {
+      setImeiSearchError("⚠️ Este IMEI já está no carrinho");
+      return;
+    }
     const nomeProd = stock.parent?.nome || "Produto";
     setCart((prev) => [
       ...prev,
@@ -220,6 +225,11 @@ export default function PdvPage() {
       if (prod.categoria.hasImei && prod.stockItems.length > 0) {
         // Adiciona apenas 1 item (primeiro disponível), não todos de uma vez
         const stock = prod.stockItems[0];
+        // 🚫 Impede adicionar o mesmo IMEI mais de uma vez
+        if (cart.some((i) => i.stockItemId === stock.id)) {
+          setProdSearchError(`⚠️ "${prod.nome}" (${stock.imei}) já está no carrinho`);
+          return;
+        }
         setCart((prev) => [
           ...prev,
           {
@@ -261,6 +271,11 @@ export default function PdvPage() {
 
   function addStockToCart(prod: ProductSearchResult, stock: ProductSearchResult["stockItems"][0]) {
     if (prod.categoria.hasImei) {
+      // 🚫 Impede adicionar o mesmo IMEI mais de uma vez
+      if (cart.some((i) => i.stockItemId === stock.id)) {
+        setProdSearchError("⚠️ Este IMEI já está no carrinho");
+        return;
+      }
       // Adiciona o item de estoque específico selecionado pelo usuário
       setCart((prev) => [
         ...prev,

@@ -93,6 +93,26 @@ export async function POST(request: NextRequest) {
   const totalPago = payments.reduce((s, p) => s + p.valor, 0);
   if (totalPago > totalFinal) troco = totalPago - totalFinal;
 
+  // 🚫 Verificação extra antes da transação: stockItem existe e está EM_ESTOQUE
+  for (const item of body.items) {
+    if (!isPreVenda && item.stockItemId && item.tipo === "SAIDA") {
+      const stock = await prisma.stockItem.findUnique({
+        where: { id: item.stockItemId },
+        select: { status: true, imei: true, parent: { select: { nome: true } } },
+      });
+      if (!stock) {
+        return NextResponse.json({ error: `Item de estoque não encontrado (ID: ${item.stockItemId})` }, { status: 400 });
+      }
+      if (stock.status !== "EM_ESTOQUE") {
+        const nomeProd = stock.parent?.nome || "Produto";
+        const imei = stock.imei || "";
+        return NextResponse.json({
+          error: `"${nomeProd}" (${imei}) não está mais disponível — status: ${stock.status}`
+        }, { status: 409 }); // 409 Conflict
+      }
+    }
+  }
+
   const transaction = await prisma.$transaction(async (tx) => {
     const transacao = await tx.transaction.create({
       data: {
@@ -130,6 +150,21 @@ export async function POST(request: NextRequest) {
       });
 
       if (!isPreVenda && item.stockItemId && item.tipo === "SAIDA") {
+        // 🚫 Verifica se o StockItem ainda está disponível (não pode vender estoque zerado)
+        const currentStock = await tx.stockItem.findUnique({
+          where: { id: item.stockItemId },
+          select: { status: true, imei: true, parent: { select: { nome: true } } },
+        });
+        if (!currentStock) {
+          throw new Error(`Item de estoque não encontrado (ID: ${item.stockItemId})`);
+        }
+        if (currentStock.status !== "EM_ESTOQUE") {
+          const nomeProd = currentStock.parent?.nome || "Produto";
+          const imei = currentStock.imei || "";
+          throw new Error(
+            `"${nomeProd}" (${imei}) não está mais disponível — status atual: ${currentStock.status}`
+          );
+        }
         await tx.stockItem.update({
           where: { id: item.stockItemId },
           data: {
@@ -137,7 +172,7 @@ export async function POST(request: NextRequest) {
             dataVenda: new Date(),
             ultimaTransacaoId: transacao.id,
             ultimaTransacaoTipo: "VENDA",
-            dataFimGarantia: null, // será definido manualmente ou via regra de negócio
+            dataFimGarantia: null,
           },
         });
       }
