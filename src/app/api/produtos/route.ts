@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1");
+  const apenasComEstoque = searchParams.get("apenasComEstoque") === "true";
   const limit = 10;
 
   const where: any = { tenantId };
@@ -22,6 +23,12 @@ export async function GET(req: NextRequest) {
       { descricao: { contains: search, mode: "insensitive" } },
       { stockItems: { some: { imei: { contains: search, mode: "insensitive" } } } },
     ];
+  }
+  // Filtro: só produtos com estoque disponível (usado no PDV)
+  if (apenasComEstoque) {
+    where.stockItems = {
+      some: { status: "EM_ESTOQUE" },
+    };
   }
 
   const [produtos, total] = await Promise.all([

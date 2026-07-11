@@ -70,6 +70,7 @@ model Category {
   updatedAt   DateTime @updatedAt
 
   productParents ProductParent[]
+  stockItems     StockItem[]
 
   @@unique([tenantId, slug])
 }
@@ -105,8 +106,14 @@ model StockItem {
   id                 String      @id @default(cuid())
   tenantId           String
   tenant             Tenant      @relation(fields: [tenantId], references: [id])
-  parentId           String
-  parent             ProductParent @relation(fields: [parentId], references: [id])
+  parentId           String?
+  parent             ProductParent? @relation(fields: [parentId], references: [id])
+  /// Para celulares independentes (sem ProductParent)
+  nome               String?
+  marca              String?
+  modelo             String?
+  categoriaId        String?
+  categoria          Category?   @relation(fields: [categoriaId], references: [id])
   imei               String?
   serialNumber       String?
   condicao           String?
@@ -139,6 +146,7 @@ model StockItem {
   @@index([tenantId, parentId])
   @@index([tenantId, imei])
   @@index([tenantId, status])
+  @@index([tenantId, categoriaId])
 }
 
 model Client {

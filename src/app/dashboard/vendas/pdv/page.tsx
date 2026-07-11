@@ -63,6 +63,7 @@ export default function PdvPage() {
   const [showProdSearch, setShowProdSearch] = useState(false);
   const [prodSearchLoading, setProdSearchLoading] = useState(false);
   const [prodSearchError, setProdSearchError] = useState("");
+  const [apenasComEstoque, setApenasComEstoque] = useState(false);
 
   // Scanner de IMEI
   const [searchImei, setSearchImei] = useState("");
@@ -129,12 +130,14 @@ export default function PdvPage() {
   const totalPago = payments.reduce((s, p) => s + p.valor, 0);
   const falta = Math.max(0, total - totalPago);
 
-  async function buscarProdutos(q: string) {
+  async function buscarProdutos(q: string, apenasEstoque?: boolean) {
     if (!q.trim()) { setProdResults([]); setShowProdSearch(false); setProdSearchError(""); return; }
     setProdSearchLoading(true);
     setProdSearchError("");
     try {
-      const res = await fetch(`/api/produtos?search=${encodeURIComponent(q)}`);
+      const params = new URLSearchParams({ search: q });
+      if (apenasEstoque) params.set("apenasComEstoque", "true");
+      const res = await fetch(`/api/produtos?${params}`);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Erro ao buscar" }));
         setProdSearchError(errData.error || `Erro ${res.status}`);
@@ -654,10 +657,26 @@ export default function PdvPage() {
               )}
             </div>
 
+            {/* Filtro Só em estoque */}
+            <div className="mb-2 flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={apenasComEstoque}
+                  onChange={(e) => {
+                    setApenasComEstoque(e.target.checked);
+                    if (searchProd.trim()) buscarProdutos(searchProd.trim(), e.target.checked);
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">Só celulares em estoque</span>
+              </label>
+            </div>
+
             <input
               type="text"
               value={searchProd}
-              onChange={(e) => { setSearchProd(e.target.value); buscarProdutos(e.target.value); }}
+              onChange={(e) => { setSearchProd(e.target.value); buscarProdutos(e.target.value, apenasComEstoque); }}
               placeholder="🔍 Buscar por nome, SKU, IMEI..."
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
             />
