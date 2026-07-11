@@ -29,15 +29,53 @@ export default function EstoqueDetalhePage() {
   const params = useParams();
   const [item, setItem] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [editando, setEditando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
     async function carregar() {
       const res = await fetch(`/api/estoque/${params.id}`);
-      if (res.ok) setItem(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data);
+        setFormData({
+          precoVenda: data.precoVenda ?? "",
+          dataFimGarantia: data.dataFimGarantia
+            ? new Date(data.dataFimGarantia).toISOString().split("T")[0]
+            : "",
+          observacoes: data.observacoes ?? "",
+          condicao: data.condicao ?? "",
+          acessoriosInclusos: data.acessoriosInclusos ?? "",
+        });
+      }
       setLoading(false);
     }
     carregar();
   }, [params.id]);
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      const res = await fetch(`/api/estoque/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Erro ao salvar");
+        return;
+      }
+      const atualizado = await res.json();
+      setItem((prev: any) => ({ ...prev, ...atualizado }));
+      setEditando(false);
+    } catch {
+      alert("Erro de conexão ao salvar");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   if (loading) return <p className="mt-8 text-center text-sm text-gray-500">Carregando...</p>;
   if (!item) return <p className="mt-8 text-center text-sm text-red-600">Item não encontrado</p>;
@@ -75,9 +113,19 @@ export default function EstoqueDetalhePage() {
                 {item.cor && ` — ${item.cor}`}{item.capacidade && ` — ${item.capacidade}`}
               </p>
             </div>
-            <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${statusColors[item.status] || "bg-gray-100 text-gray-600"}`}>
-              {statusLabels[item.status] || item.status}
-            </span>
+            <div className="flex items-center gap-2">
+              {!editando && item.status === "EM_ESTOQUE" && (
+                <button
+                  onClick={() => setEditando(true)}
+                  className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+                >
+                  ✏️ Editar
+                </button>
+              )}
+              <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${statusColors[item.status] || "bg-gray-100 text-gray-600"}`}>
+                {statusLabels[item.status] || item.status}
+              </span>
+            </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
@@ -88,14 +136,147 @@ export default function EstoqueDetalhePage() {
               </div>
             )}
             {item.serialNumber && <div><span className="text-gray-500">Serial:</span> <span className="font-medium">{item.serialNumber}</span></div>}
-            <div><span className="text-gray-500">Condição:</span> <span className="font-medium">{condicaoLabels[item.condicao || ""] || item.condicao || "—"}</span></div>
+
+            {/* CONDIÇÃO — editável */}
+            {editando ? (
+              <div>
+                <label className="text-gray-500">Condição:</label>
+                <select
+                  value={formData.condicao || ""}
+                  onChange={(e) => setFormData((f: any) => ({ ...f, condicao: e.target.value }))}
+                  className="ml-1 rounded border border-gray-300 px-2 py-1 text-sm"
+                >
+                  <option value="">Selecione</option>
+                  <option value="NOVO">Novo</option>
+                  <option value="COMO_NOVO">Como Novo</option>
+                  <option value="BOM">Bom</option>
+                  <option value="REGULAR">Regular</option>
+                  <option value="RUIM">Ruim</option>
+                </select>
+              </div>
+            ) : (
+              <div><span className="text-gray-500">Condição:</span> <span className="font-medium">{condicaoLabels[item.condicao || ""] || item.condicao || "—"}</span></div>
+            )}
+
             {item.nivelBateria !== null && <div><span className="text-gray-500">Bateria:</span> <span className="font-medium">{item.nivelBateria}%</span></div>}
-            {item.precoCusto && <div><span className="text-gray-500">Custo:</span> <span className="font-medium">{formatCurrency(item.precoCusto)}</span></div>}
-            {item.precoVenda && <div><span className="text-gray-500">Preço Venda:</span> <span className="font-semibold">{formatCurrency(item.precoVenda)}</span></div>}
+
+            {/* PREÇO CUSTO — somente leitura */}
+            {item.precoCusto !== null && item.precoCusto !== undefined && <div><span className="text-gray-500">Custo:</span> <span className="font-medium">{formatCurrency(item.precoCusto)}</span></div>}
+
+            {/* PREÇO VENDA — editável */}
+            {editando ? (
+              <div>
+                <label className="font-medium text-gray-700">Preço Venda:</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.precoVenda}
+                  onChange={(e) => setFormData((f: any) => ({ ...f, precoVenda: e.target.value }))}
+                  className="ml-1 w-32 rounded border border-gray-300 px-2 py-1 text-sm"
+                />
+              </div>
+            ) : (
+              <div>
+                <span className="text-gray-500">Preço Venda:</span>
+                <span className="ml-1 font-semibold">
+                  {item.precoVenda ? formatCurrency(item.precoVenda) : "—"}
+                </span>
+              </div>
+            )}
+
             <div><span className="text-gray-500">Entrada em:</span> <span className="font-medium">{formatDateTime(item.dataEntrada)}</span></div>
             {item.dataVenda && <div><span className="text-gray-500">Vendido em:</span> <span className="font-medium">{formatDateTime(item.dataVenda)}</span></div>}
-            {item.acessoriosInclusos && <div className="col-span-2"><span className="text-gray-500">Acessórios:</span> <span className="font-medium">{item.acessoriosInclusos}</span></div>}
+
+            {/* GARANTIA — editável */}
+            {editando ? (
+              <div>
+                <label className="font-medium text-gray-700">Garantia até:</label>
+                <input
+                  type="date"
+                  value={formData.dataFimGarantia}
+                  onChange={(e) => setFormData((f: any) => ({ ...f, dataFimGarantia: e.target.value }))}
+                  className="ml-1 rounded border border-gray-300 px-2 py-1 text-sm"
+                />
+              </div>
+            ) : (
+              <div>
+                <span className="text-gray-500">Garantia até:</span>
+                <span className="font-medium">
+                  {item.dataFimGarantia ? formatDateTime(item.dataFimGarantia) : "—"}
+                </span>
+              </div>
+            )}
+
+            {/* ACESSÓRIOS — editável */}
+            {editando ? (
+              <div className="col-span-2">
+                <label className="font-medium text-gray-700">Acessórios inclusos:</label>
+                <input
+                  type="text"
+                  value={formData.acessoriosInclusos}
+                  onChange={(e) => setFormData((f: any) => ({ ...f, acessoriosInclusos: e.target.value }))}
+                  className="ml-1 w-64 rounded border border-gray-300 px-2 py-1 text-sm"
+                />
+              </div>
+            ) : (
+              item.acessoriosInclusos && (
+                <div className="col-span-2">
+                  <span className="text-gray-500">Acessórios:</span>
+                  <span className="font-medium">{item.acessoriosInclusos}</span>
+                </div>
+              )
+            )}
           </div>
+
+          {/* OBSERVAÇÕES — editável */}
+          {editando ? (
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-700">Observações:</label>
+              <textarea
+                value={formData.observacoes}
+                onChange={(e) => setFormData((f: any) => ({ ...f, observacoes: e.target.value }))}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                rows={3}
+              />
+            </div>
+          ) : (
+            item.observacoes && (
+              <div className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+                {item.observacoes}
+              </div>
+            )
+          )}
+
+          {/* BOTÕES SALVAR/CANCELAR */}
+          {editando && (
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={salvar}
+                disabled={salvando}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {salvando ? "Salvando..." : "💾 Salvar"}
+              </button>
+              <button
+                onClick={() => {
+                  setEditando(false);
+                  // Restaura valores originais
+                  setFormData({
+                    precoVenda: item.precoVenda ?? "",
+                    dataFimGarantia: item.dataFimGarantia
+                      ? new Date(item.dataFimGarantia).toISOString().split("T")[0]
+                      : "",
+                    observacoes: item.observacoes ?? "",
+                    condicao: item.condicao ?? "",
+                    acessoriosInclusos: item.acessoriosInclusos ?? "",
+                  });
+                }}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
         </div>
 
         {/* CLIENTE / ORIGEM */}
