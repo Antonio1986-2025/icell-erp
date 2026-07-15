@@ -372,15 +372,15 @@ export default function EstoqueDetalhePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📥</span>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Entrada via Laudo</p>
+                    <p className="text-sm font-medium text-gray-900">Entrada via Trade-in</p>
                     <p className="text-xs text-gray-500">{formatDateTime(laudo.createdAt)}</p>
                   </div>
                 </div>
                 <Link
-                  href={`/dashboard/estoque/laudos/${laudo.id}`}
+                  href={`/dashboard/estoque/trade-in/${laudo.id}`}
                   className="text-xs text-blue-600 hover:underline"
                 >
-                  Ver laudo →
+                  Ver trade-in →
                 </Link>
               </div>
             )}

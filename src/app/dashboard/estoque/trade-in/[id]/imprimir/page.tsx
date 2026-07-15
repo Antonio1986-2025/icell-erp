@@ -23,7 +23,7 @@ interface LaudoDetalhe {
   cliente: { nome: string; cpf: string | null; telefone: string | null } | null;
 }
 
-export default function ImprimirLaudoPage() {
+export default function ImprimirTradeInPage() {
   const params = useParams();
   const [laudo, setLaudo] = useState<LaudoDetalhe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function ImprimirLaudoPage() {
 
   useEffect(() => {
     async function carregar() {
-      const res = await fetch(`/api/laudos/${params.id}`);
+      const res = await fetch(`/api/trade-in/${params.id}`);
       if (res.ok) setLaudo(await res.json());
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function ImprimirLaudoPage() {
   }, [loading, laudo]);
 
   if (loading) return <p className="p-8 text-center text-sm text-gray-500">Carregando...</p>;
-  if (!laudo) return <p className="p-8 text-center text-sm text-red-600">Laudo não encontrado</p>;
+  if (!laudo) return <p className="p-8 text-center text-sm text-red-600">Trade-in não encontrado</p>;
 
   const fotos = laudo.fotos ? JSON.parse(laudo.fotos) : {};
   const checklist = laudo.checklistResult ? JSON.parse(laudo.checklistResult) : {};
@@ -110,7 +110,7 @@ export default function ImprimirLaudoPage() {
           <p>Minha Loja<br />CNPJ: 00.000.000/0000-00</p>
         </div>
         <div className="numero">
-          <strong>LAUDO DE INSPEÇÃO</strong><br />
+          <strong>TRADE-IN</strong><br />
           Nº {laudo.id.slice(0, 8).toUpperCase()}<br />
           <span style={{ color: "#64748b", fontSize: 10 }}>{new Date(laudo.createdAt).toLocaleDateString("pt-BR")}</span>
         </div>
@@ -192,7 +192,7 @@ export default function ImprimirLaudoPage() {
 
       <div className="footer">
         <p>Documento gerado eletronicamente pelo iCell ERP</p>
-        <p>Consulte a autenticidade em icell.app/laudo/{laudo.id.slice(0, 8).toUpperCase()}</p>
+        <p>Consulte a autenticidade em icell.app/trade-in/{laudo.id.slice(0, 8).toUpperCase()}</p>
       </div>
     </div>
   );

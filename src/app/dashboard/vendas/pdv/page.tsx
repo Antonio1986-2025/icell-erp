@@ -363,7 +363,7 @@ export default function PdvPage() {
 
   // Laudo selector
   async function abrirLaudoSelector() {
-    const res = await fetch("/api/laudos?status=PENDENTE");
+    const res = await fetch("/api/trade-in?status=PENDENTE");
     if (res.ok) {
       const dados = await res.json();
       const comCheck = await Promise.all(

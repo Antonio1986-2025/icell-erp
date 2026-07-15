@@ -30,7 +30,7 @@ const statusColors: Record<string, string> = {
   CANCELADO: "bg-gray-100 text-gray-500",
 };
 
-export default function LaudosPage() {
+export default function TradeInPage() {
   const [laudos, setLaudos] = useState<Laudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -41,7 +41,7 @@ export default function LaudosPage() {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (filtroStatus) params.set("status", filtroStatus);
-    const res = await fetch(`/api/laudos?${params}`);
+    const res = await fetch(`/api/trade-in?${params}`);
     if (res.ok) setLaudos(await res.json());
     setLoading(false);
   }
@@ -57,14 +57,14 @@ export default function LaudosPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Laudos de Inspeção</h1>
-          <p className="text-sm text-gray-500">{laudos.length} laudo{laudos.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-2xl font-bold text-gray-900">Trade-in</h1>
+          <p className="text-sm text-gray-500">{laudos.length} trade-in{laudos.length !== 1 ? "s" : ""}</p>
         </div>
         <Link
-          href="/dashboard/estoque/laudos/novo"
+          href="/dashboard/estoque/trade-in/novo"
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          Novo Laudo
+          Novo Trade-in
         </Link>
       </div>
 
@@ -97,7 +97,7 @@ export default function LaudosPage() {
           {laudos.map((laudo) => (
             <Link
               key={laudo.id}
-              href={`/dashboard/estoque/laudos/${laudo.id}`}
+              href={`/dashboard/estoque/trade-in/${laudo.id}`}
               className="block rounded-lg border border-gray-200 bg-white p-4 transition hover:shadow-sm"
             >
               <div className="flex items-start justify-between">
@@ -130,7 +130,7 @@ export default function LaudosPage() {
           ))}
           {laudos.length === 0 && (
             <p className="py-12 text-center text-sm text-gray-500">
-              {search ? "Nenhum laudo encontrado" : "Nenhum laudo cadastrado"}
+              {search ? "Nenhum trade-in encontrado" : "Nenhum trade-in cadastrado"}
             </p>
           )}
         </div>

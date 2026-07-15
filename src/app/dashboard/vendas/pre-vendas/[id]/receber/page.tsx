@@ -235,8 +235,8 @@ export default function ReceberPreVendaPage() {
             <div className="mt-3 rounded-lg bg-amber-100 p-3">
               <p className="text-sm font-medium text-amber-800">Troca: {laudoData.aparelhoNome}</p>
               <p className="text-sm text-amber-700">Valor: -{formatCurrency(laudoData?.valorEstimado || 0)}</p>
-              <Link href={`/dashboard/estoque/laudos/${laudoData.id}`} className="text-xs text-amber-600 hover:underline">
-                Ver laudo →
+              <Link href={`/dashboard/estoque/trade-in/${laudoData.id}`} className="text-xs text-amber-600 hover:underline">
+                Ver trade-in →
               </Link>
             </div>
           )}
@@ -250,7 +250,7 @@ export default function ReceberPreVendaPage() {
               <div>
                 <p className="font-bold text-blue-900">Produto {condicao} — Faça a inspeção</p>
                 <p className="text-sm text-blue-700">
-                  Preencha o checklist abaixo para gerar o laudo automaticamente na finalização.
+                  Preencha o checklist abaixo para gerar o trade-in automaticamente na finalização.
                   {itensOk > 0 && ` ${itensOk}/${totalItensChecklist} itens OK`}
                 </p>
               </div>

@@ -151,7 +151,7 @@ export default function VendaDetalhePage() {
             {venda.inspectionReports.map((laudo) => (
               <Link
                 key={laudo.id}
-                href={`/dashboard/estoque/laudos/${laudo.id}`}
+                href={`/dashboard/estoque/trade-in/${laudo.id}`}
                 className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 hover:bg-gray-50"
               >
                 <div>

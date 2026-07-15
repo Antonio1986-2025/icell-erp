@@ -327,15 +327,15 @@ export default function ClienteDetalhePage() {
         </div>
       )}
 
-      {/* Laudos */}
+      {/* Trade-ins */}
       {cliente.inspectionReports.length > 0 && (
         <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-sm font-bold uppercase text-gray-700">Laudos de Inspeção</h2>
+          <h2 className="mb-4 text-sm font-bold uppercase text-gray-700">Trade-ins</h2>
           <div className="space-y-2">
             {cliente.inspectionReports.map((l) => (
               <Link
                 key={l.id}
-                href={`/dashboard/estoque/laudos/${l.id}`}
+                href={`/dashboard/estoque/trade-in/${l.id}`}
                 className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3 hover:bg-gray-50"
               >
                 <div>

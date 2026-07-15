@@ -47,7 +47,7 @@ const condicaoLabels: Record<string, string> = {
   RUIM: "Ruim",
 };
 
-export default function LaudoDetalhePage() {
+export default function TradeInDetalhePage() {
   const params = useParams();
   const router = useRouter();
   const [laudo, setLaudo] = useState<LaudoDetalhe | null>(null);
@@ -55,7 +55,7 @@ export default function LaudoDetalhePage() {
 
   useEffect(() => {
     async function carregar() {
-      const res = await fetch(`/api/laudos/${params.id}`);
+      const res = await fetch(`/api/trade-in/${params.id}`);
       if (res.ok) setLaudo(await res.json());
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function LaudoDetalhePage() {
   }, [params.id]);
 
   if (loading) return <p className="mt-8 text-center text-sm text-gray-500">Carregando...</p>;
-  if (!laudo) return <p className="mt-8 text-center text-sm text-red-600">Laudo não encontrado</p>;
+  if (!laudo) return <p className="mt-8 text-center text-sm text-red-600">Trade-in não encontrado</p>;
 
   const fotos = laudo.fotos ? JSON.parse(laudo.fotos) : {};
   const checklist = laudo.checklistResult ? JSON.parse(laudo.checklistResult) : {};
@@ -83,14 +83,14 @@ export default function LaudoDetalhePage() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between">
         <Link
-          href="/dashboard/estoque/laudos"
+          href="/dashboard/estoque/trade-in"
           className="text-sm text-blue-600 hover:underline"
         >
-          ← Voltar para laudos
+          ← Voltar para trade-ins
         </Link>
         <div className="flex gap-2">
           <Link
-            href={`/dashboard/estoque/laudos/${laudo.id}/imprimir`}
+            href={`/dashboard/estoque/trade-in/${laudo.id}/imprimir`}
             target="_blank"
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
@@ -100,8 +100,8 @@ export default function LaudoDetalhePage() {
             <button
               type="button"
               onClick={async () => {
-                if (!confirm("Cancelar este laudo?")) return;
-                await fetch(`/api/laudos/${laudo.id}`, {
+                if (!confirm("Cancelar este trade-in?")) return;
+                await fetch(`/api/trade-in/${laudo.id}`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ status: "CANCELADO" }),
@@ -111,7 +111,7 @@ export default function LaudoDetalhePage() {
               }}
               className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
             >
-              Cancelar Laudo
+              Cancelar Trade-in
             </button>
           )}
         </div>

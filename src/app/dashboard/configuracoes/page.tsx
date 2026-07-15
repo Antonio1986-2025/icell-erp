@@ -503,7 +503,7 @@ function WhatsAppConfig() {
         <ul className="space-y-2 text-sm text-gray-600">
           <li>🤖 O agente IA responde automaticamente perguntas sobre <strong>produtos, preços e estoque</strong></li>
           <li>💬 Clientes podem consultar preços e disponibilidade diretamente pelo WhatsApp</li>
-          <li>🔄 O agente também calcula <strong>troca com laudo</strong> (avaliação de aparelho usado)</li>
+          <li>🔄 O agente também calcula <strong>troca com trade-in</strong> (avaliação de aparelho usado)</li>
           <li>⚙️ Para alterar o comportamento do agente, edite o arquivo <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">ai-assistant.service.ts</code></li>
         </ul>
       </div>

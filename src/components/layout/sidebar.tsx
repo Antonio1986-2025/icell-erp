@@ -10,7 +10,7 @@ const menuItems = [
   { label: "Produtos", href: "/dashboard/produtos", icon: "📱" },
   { label: "Novo Celular", href: "/dashboard/celulares/novo", icon: "📱" },
   { label: "Estoque", href: "/dashboard/estoque", icon: "📦" },
-  { label: "Laudos", href: "/dashboard/estoque/laudos", icon: "📋" },
+  { label: "Trade-in", href: "/dashboard/estoque/trade-in", icon: "🔄" },
   { label: "PDV", href: "/dashboard/vendas/pdv", icon: "🛒" },
   { label: "Vendas", href: "/dashboard/vendas", icon: "💰" },
   { label: "Pré-Vendas", href: "/dashboard/vendas/pre-vendas", icon: "📋" },

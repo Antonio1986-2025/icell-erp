@@ -114,11 +114,11 @@ export default async function DashboardPage() {
             <span className="text-sm font-medium text-gray-700">Novo Cliente</span>
           </Link>
           <Link
-            href="/dashboard/estoque/laudos/novo"
+            href="/dashboard/estoque/trade-in/novo"
             className="flex flex-col items-center gap-2 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-amber-200 transition-all active:scale-95"
           >
             <span className="text-3xl">🔍</span>
-            <span className="text-sm font-medium text-gray-700">Laudo</span>
+            <span className="text-sm font-medium text-gray-700">Trade-in</span>
           </Link>
         </div>
       </div>

@@ -1,29 +1,29 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Laudos de Inspeção", () => {
+test.describe("Trade-in", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
-  test("listagem de laudos carrega", async ({ page }) => {
-    await page.goto("/dashboard/estoque/laudos");
-    await expect(page.getByRole("heading", { name: "Laudos de Inspeção" })).toBeVisible();
+  test("listagem de trade-ins carrega", async ({ page }) => {
+    await page.goto("/dashboard/estoque/trade-in");
+    await expect(page.getByRole("heading", { name: "Trade-in" })).toBeVisible();
   });
 
-  test("botao Novo Laudo redireciona", async ({ page }) => {
-    await page.goto("/dashboard/estoque/laudos");
-    await page.click("a:has-text('Novo Laudo')");
-    await expect(page).toHaveURL("/dashboard/estoque/laudos/novo");
-    await expect(page.getByRole("heading", { name: "Novo Laudo de Inspeção" })).toBeVisible();
+  test("botao Novo Trade-in redireciona", async ({ page }) => {
+    await page.goto("/dashboard/estoque/trade-in");
+    await page.click("a:has-text('Novo Trade-in')");
+    await expect(page).toHaveURL("/dashboard/estoque/trade-in/novo");
+    await expect(page.getByRole("heading", { name: "Novo Trade-in" })).toBeVisible();
   });
 
-  test("wizard novo laudo exibe passo 1", async ({ page }) => {
-    await page.goto("/dashboard/estoque/laudos/novo");
+  test("wizard novo trade-in exibe passo 1", async ({ page }) => {
+    await page.goto("/dashboard/estoque/trade-in/novo");
     await expect(page.getByText("Cliente (vendedor)")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Aparelho" })).toBeVisible();
     await expect(page.getByText("Nome do Aparelho *")).toBeVisible();
   });
 
-  test("criacao de laudo basico", async ({ page }) => {
-    await page.goto("/dashboard/estoque/laudos/novo");
+  test("criacao de trade-in basico", async ({ page }) => {
+    await page.goto("/dashboard/estoque/trade-in/novo");
 
     const imeiUnico = `358247111${String(Date.now()).slice(-6)}`;
 
@@ -43,7 +43,7 @@ test.describe("Laudos de Inspeção", () => {
     await page.waitForTimeout(300);
 
     await page.getByPlaceholder("2800").fill("2500");
-    await page.getByRole("button", { name: "Salvar Laudo" }).click();
+    await page.getByRole("button", { name: "Salvar Trade-in" }).click();
     await page.waitForTimeout(2000);
 
     await expect(page.getByText("iPhone 13 128GB Preto").first()).toBeVisible();

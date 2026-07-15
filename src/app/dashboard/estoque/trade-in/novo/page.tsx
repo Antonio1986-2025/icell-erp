@@ -6,7 +6,7 @@ import { checklistItems, camposFoto } from "@/lib/checklist";
 
 type Step = 1 | 2 | 3 | 4;
 
-export default function NovoLaudoPage() {
+export default function NovoTradeInPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
@@ -40,6 +40,10 @@ export default function NovoLaudoPage() {
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [imeiLoading, setImeiLoading] = useState(false);
   const [imeiResult, setImeiResult] = useState<any>(null);
+  const [clienteSearchTerm, setClienteSearchTerm] = useState("");
+  const [clientesEncontrados, setClientesEncontrados] = useState<any[]>([]);
+  const [buscandoClienteLista, setBuscandoClienteLista] = useState(false);
+  const buscaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   async function lookupImei() {
     const digits = form.imei.replace(/\D/g, "");
@@ -85,25 +89,39 @@ export default function NovoLaudoPage() {
     }
   }
 
-  async function buscarCliente() {
-    if (!form.clienteCpf) return;
-    setBuscandoCliente(true);
+  async function buscarCliente(termo: string) {
+    if (!termo.trim()) {
+      setClientesEncontrados([]);
+      return;
+    }
+    setBuscandoClienteLista(true);
     try {
-      const res = await fetch(`/api/clientes?cpf=${form.clienteCpf}`);
+      const res = await fetch(`/api/clientes?search=${encodeURIComponent(termo)}`);
       if (res.ok) {
         const data = await res.json();
-        if (data) {
-          setForm((prev) => ({
-            ...prev,
-            clienteId: data.id,
-            clienteNome: data.nome,
-            clienteTelefone: data.telefone || "",
-          }));
-        }
+        setClientesEncontrados(data || []);
       }
     } finally {
-      setBuscandoCliente(false);
+      setBuscandoClienteLista(false);
     }
+  }
+
+  function handleClienteSearch(value: string) {
+    setClienteSearchTerm(value);
+    if (buscaTimeoutRef.current) clearTimeout(buscaTimeoutRef.current);
+    buscaTimeoutRef.current = setTimeout(() => buscarCliente(value), 400);
+  }
+
+  function selecionarCliente(cliente: any) {
+    setForm((prev) => ({
+      ...prev,
+      clienteId: cliente.id,
+      clienteNome: cliente.nome,
+      clienteCpf: cliente.cpf || "",
+      clienteTelefone: cliente.telefone || "",
+    }));
+    setClienteSearchTerm(cliente.nome);
+    setClientesEncontrados([]);
   }
 
   async function abrirCamera(campoId: string) {
@@ -195,7 +213,7 @@ export default function NovoLaudoPage() {
         observacoes: observacoes || null,
       };
 
-      const res = await fetch("/api/laudos", {
+      const res = await fetch("/api/trade-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -209,7 +227,7 @@ export default function NovoLaudoPage() {
       }
 
       const laudo = await res.json();
-      router.push(`/dashboard/estoque/laudos/${laudo.id}`);
+      router.push(`/dashboard/estoque/trade-in/${laudo.id}`);
     } catch {
       setError("Erro ao salvar laudo");
       setLoading(false);
@@ -226,7 +244,7 @@ export default function NovoLaudoPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Novo Laudo de Inspeção</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Novo Trade-in</h1>
 
         <div className="mt-4 flex items-center gap-2">
           {([1, 2, 3, 4] as Step[]).map((s) => (
@@ -260,25 +278,35 @@ export default function NovoLaudoPage() {
           </div>
 
           <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700">CPF</label>
-              <div className="mt-1 flex gap-2">
-                <input
-                  type="text"
-                  value={form.clienteCpf}
-                  onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })}
-                  placeholder="000.000.000-00"
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={buscarCliente}
-                  disabled={buscandoCliente}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  {buscandoCliente ? "Buscando..." : "Buscar"}
-                </button>
-              </div>
+            <div className="flex-1 relative">
+              <label className="block text-sm font-medium text-gray-700">Buscar cliente</label>
+              <p className="text-xs text-gray-400 mb-1">Digite nome, CPF ou telefone</p>
+              <input
+                type="text"
+                value={clienteSearchTerm}
+                onChange={(e) => handleClienteSearch(e.target.value)}
+                placeholder="Nome, CPF ou telefone..."
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              />
+              {buscandoClienteLista && (
+                <p className="mt-1 text-xs text-gray-400">Buscando...</p>
+              )}
+              {clientesEncontrados.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-auto">
+                  {clientesEncontrados.map((c: any) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => selecionarCliente(c)}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 border-b border-gray-100 last:border-0"
+                    >
+                      <span className="font-medium">{c.nome}</span>
+                      {c.cpf && <span className="ml-2 text-xs text-gray-400">{c.cpf}</span>}
+                      {c.telefone && <span className="ml-2 text-xs text-gray-400">{c.telefone}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

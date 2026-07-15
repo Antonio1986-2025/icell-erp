@@ -86,7 +86,7 @@ export default function NovaPreVendaPage() {
   // -- search --
   useEffect(() => {
     if (steps[step].key === "troca") {
-      fetch("/api/laudos?status=PENDENTE")
+      fetch("/api/trade-in?status=PENDENTE")
         .then((r) => r.json())
         .then((d) => setLaudos(d || []))
         .catch(() => {});
@@ -443,10 +443,10 @@ export default function NovaPreVendaPage() {
                 autoFocus
               />
 
-              <p className="mt-2 text-xs text-gray-400">{filtrados.length} laudo{filtrados.length !== 1 ? "s" : ""} pendente{filtrados.length !== 1 ? "s" : ""}</p>
+              <p className="mt-2 text-xs text-gray-400">{filtrados.length} trade-in{filtrados.length !== 1 ? "s" : ""} pendente{filtrados.length !== 1 ? "s" : ""}</p>
 
               {laudos.length === 0 ? (
-                <p className="mt-4 text-center text-sm text-gray-500">Nenhum laudo pendente disponível</p>
+                <p className="mt-4 text-center text-sm text-gray-500">Nenhum trade-in pendente disponível</p>
               ) : (
                 <div className="mt-2 max-h-64 overflow-auto space-y-2">
                   {filtrados.map((l) => (

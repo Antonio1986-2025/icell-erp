@@ -12,19 +12,35 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") || "";
 
   if (cpf) {
+    // Normaliza o CPF removendo pontuação para buscar tanto formatado quanto sem formatação
+    const cpfClean = cpf.replace(/\D/g, "");
     const cliente = await prisma.client.findFirst({
-      where: { tenantId, cpf },
+      where: {
+        tenantId,
+        OR: [
+          { cpf },
+          { cpf: { contains: cpfClean } },
+        ],
+      },
     });
     return NextResponse.json(cliente);
   }
 
   const where: any = { tenantId };
   if (search) {
+    const searchClean = search.replace(/\D/g, "");
     where.OR = [
       { nome: { contains: search } },
-      { cpf: { contains: search } },
       { telefone: { contains: search } },
+      { cpf: { contains: search } },
     ];
+    // Se a busca limpa (só números) for diferente, adiciona também como fallback
+    if (searchClean !== search) {
+      where.OR.push(
+        { cpf: { contains: searchClean } },
+        { telefone: { contains: searchClean } },
+      );
+    }
   }
 
   const clientes = await prisma.client.findMany({
